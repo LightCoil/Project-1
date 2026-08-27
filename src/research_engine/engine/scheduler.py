@@ -10,6 +10,7 @@ from research_engine.domain.step_execution import StepExecution
 from research_engine.domain.worker import Worker
 from research_engine.domain.workflow import Workflow, WorkflowStep
 from research_engine.engine.context_builder import ContextBuilder
+from research_engine.engine.worker_executor import WorkerExecutor
 from research_engine.engine.fake_client import GenerationClient
 from research_engine.persistence.experiment_store import ExperimentStore
 from research_engine.persistence.files import ExperimentFiles
@@ -31,11 +32,51 @@ class Scheduler:
         client: GenerationClient,
         files: ExperimentFiles,
         context_builder: ContextBuilder | None = None,
+        worker_executor: WorkerExecutor | None = None,
     ) -> None:
         self.store = store
         self.client = client
         self.files = files
         self.context_builder = context_builder or ContextBuilder()
+        self.worker_executor = worker_executor or self._build_worker_executor()
+
+    def _build_worker_executor(self) -> WorkerExecutor:
+        """Create the default WorkerExecutor used by the Scheduler."""
+        from research_engine.engine.worker_runtime import WorkerRuntime
+        from research_engine.engine.model_config import ModelRegistry
+
+        registry = ModelRegistry()
+
+        for worker in self.store.workers:
+            try:
+                config = WorkerRuntime.create(
+                    worker=worker,
+                    registry=registry,
+                    client=self.client,
+                )
+            except Exception:
+                continue
+
+            model_config = config.model_config
+            if model_config is not None:
+                registry.register(model_config)
+
+        workers = self.store.workers
+        if not workers:
+            raise RuntimeError(
+                "Cannot build WorkerExecutor: no workers are registered."
+            )
+
+        runtime = WorkerRuntime.create(
+            worker=workers[0],
+            registry=registry,
+            client=self.client,
+        )
+
+        return WorkerExecutor(
+            runtime=runtime,
+            client=self.client,
+        )
 
     def next_work(self) -> ReadyWork | None:
         for research in self.store.list_researches():
@@ -113,7 +154,11 @@ class Scheduler:
         self.store.save_experiment(experiment)
 
         try:
-            result = self.client.generate(worker, request)
+            execution_result = self.worker_executor.execute(
+                worker=worker,
+                request=request,
+            )
+            result = execution_result.result
             artifact = Artifact.create(
                 research_id=research.id,
                 step_execution_id=execution.id,
@@ -161,7 +206,11 @@ class Scheduler:
             summary_content = f"**Итог:**\n{final_artifact.content}"
             summary_meta: dict = {"step": "SUMMARY", "worker_id": None}
         else:
-            summary_result = self.client.generate(summary_worker, request)
+            summary_execution = self.worker_executor.execute(
+                worker=summary_worker,
+                request=request,
+            )
+            summary_result = summary_execution.result
             summary_content = summary_result.content
             summary_meta = {
                 "step": "SUMMARY",
