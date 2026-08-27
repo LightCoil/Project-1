@@ -1,6 +1,7 @@
 from __future__ import annotations
+from copy import deepcopy
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from research_engine.domain.generation import (
@@ -40,6 +41,9 @@ class WorkerExecutionResult:
                 "temperature": self.request.temperature,
                 "max_tokens": self.request.max_tokens,
                 "context": dict(self.request.context),
+                "generation_parameters": dict(
+                    self.request.generation_parameters
+                ),
             },
             "result": {
                 "content": self.result.content,
@@ -92,20 +96,44 @@ class WorkerExecutor:
         """
         Выполнить генерацию для worker.
 
-        Параметры GenerationRequest сохраняются как есть.
-        Конфигурация модели при этом разрешается через WorkerRuntime.
+        Параметры модели разрешаются через WorkerRuntime и
+        передаются дальше в отдельную копию GenerationRequest.
+
+        Исходный request не изменяется.
         """
 
         model = self._runtime.resolve_model(worker)
 
+        parameters = self._runtime.generation_parameters(worker=worker)
+
+        forwarded_request = replace(
+            request,
+            temperature=parameters.get(
+                "temperature",
+                request.temperature,
+            ),
+            max_tokens=parameters.get(
+                "max_tokens",
+                request.max_tokens,
+            ),
+            generation_parameters=deepcopy(parameters),
+        )
+
         result = self._client.generate(
             worker,
+            forwarded_request,
+        )
+
+        execution_request = replace(
             request,
+            generation_parameters=deepcopy(
+                forwarded_request.generation_parameters
+            ),
         )
 
         return WorkerExecutionResult(
             worker=worker,
-            request=request,
+            request=execution_request,
             result=result,
             model_name=model.name,
         )

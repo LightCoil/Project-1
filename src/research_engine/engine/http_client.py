@@ -1,4 +1,5 @@
 from __future__ import annotations
+from copy import deepcopy
 
 import json
 from urllib.error import HTTPError, URLError
@@ -162,7 +163,6 @@ class HttpGenerationClient:
         worker: Any | None,
         request: Any,
     ) -> dict[str, Any]:
-
         system_prompt = getattr(
             request,
             "system_prompt",
@@ -190,6 +190,12 @@ class HttpGenerationClient:
         context = getattr(
             request,
             "context",
+            None,
+        )
+
+        generation_parameters = getattr(
+            request,
+            "generation_parameters",
             None,
         )
 
@@ -228,6 +234,21 @@ class HttpGenerationClient:
 
         if context:
             payload["context"] = context
+
+        if isinstance(generation_parameters, dict):
+            for key, value in deepcopy(
+                generation_parameters
+            ).items():
+                if key in {
+                    "system_prompt",
+                    "user_prompt",
+                    "messages",
+                    "model",
+                    "context",
+                }:
+                    continue
+
+                payload[key] = value
 
         return payload
 

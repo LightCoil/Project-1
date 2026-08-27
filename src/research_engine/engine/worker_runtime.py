@@ -148,7 +148,7 @@ class WorkerRuntime:
 
         return self.resolve_model().endpoint
 
-    def generation_parameters(self) -> dict[str, Any]:
+    def generation_parameters(self, worker: Worker | None = None) -> dict[str, Any]:
         """
         Return an independent copy of all generation parameters
         exposed by the active ModelConfig.
@@ -157,7 +157,7 @@ class WorkerRuntime:
         dictionary, while custom parameters are preserved.
         """
 
-        config = self.resolve_model()
+        config = self.resolve_model(worker)
 
         parameters: dict[str, Any] = {}
 

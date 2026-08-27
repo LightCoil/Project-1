@@ -11,6 +11,9 @@ class GenerationRequest:
     temperature: float = 0.7
     max_tokens: int = 4096
     context: dict[str, Any] = field(default_factory=dict)
+    generation_parameters: dict[str, Any] = field(
+        default_factory=dict
+    )
 
 
 @dataclass
