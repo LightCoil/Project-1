@@ -9,8 +9,8 @@ class ModelConfig:
     """
     Configuration of an external generation model.
 
-    The model itself is not part of Project-1.
-    Project-1 only stores the information required to access it.
+    Project-1 does not contain the model itself.
+    It only stores the configuration required to access it.
     """
 
     name: str
@@ -53,18 +53,25 @@ class ModelConfig:
 @dataclass
 class ModelRegistry:
     """
-    Registry of model configurations.
+    Registry of externally accessible model configurations.
 
-    Project-1 can work with any number of externally hosted models.
-    The registry only maps a logical configuration name to ModelConfig.
+    Each model name must be unique.
     """
 
     _models: dict[str, ModelConfig] = field(default_factory=dict)
 
     def register(self, config: ModelConfig) -> None:
         """
-        Add or replace a model configuration.
+        Register a model configuration.
+
+        Model names are unique. Registering another model with
+        an already existing name is considered an error.
         """
+        if config.name in self._models:
+            raise ValueError(
+                f"Model already registered: {config.name}"
+            )
+
         self._models[config.name] = config
 
     def get(self, name: str) -> ModelConfig:
@@ -142,6 +149,7 @@ class ModelRegistry:
                     "name": config_data.get("name", name),
                 }
             )
+
             registry.register(config)
 
         return registry
