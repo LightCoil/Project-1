@@ -10,9 +10,10 @@ from research_engine.engine.generation_client import GenerationClient
 
 class FakeGenerationClient:
     """
-    Тестовая реализация GenerationClient.
+    Тестовый клиент генерации.
 
-    Используется для тестирования Project-1 без реальной модели.
+    Не обращается к внешней модели.
+    Нужен для проверки Scheduler и всего pipeline.
     """
 
     def __init__(
@@ -28,70 +29,62 @@ class FakeGenerationClient:
         request: GenerationRequest,
     ) -> GenerationResult:
 
-        context = request.context
-
-        step_name = context.get("step_name")
+        step = request.context.get("step")
 
         if (
             self.fail_on_step is not None
-            and step_name == self.fail_on_step
+            and step == self.fail_on_step
         ):
             raise RuntimeError(
-                f"Fake generation failure on step {step_name}"
+                f"Fake generation failure on step {step}"
             )
 
-        # ----------------------------------------------------
-        # Определяем текущий этап.
-        #
-        # Реальный ContextBuilder уже формирует request.context.
-        # Поэтому Fake client не должен самостоятельно строить
-        # контекст исследования.
-        # ----------------------------------------------------
-
-        if step_name == "A":
-
+        if step == "A":
             content = (
                 f"[FAKE A by {worker.name}] "
-                f"Thesis generated from the research objective.\n\n"
-                f"{request.user_prompt}"
+                f"Thesis for: "
+                f"{request.context.get('objective', '')}"
             )
 
-        elif step_name == "B":
+        elif step == "B":
+            source = request.context.get("inputs", {}).get("A", "")
 
             content = (
                 f"[FAKE B by {worker.name}] "
-                f"Critique of the previous result.\n\n"
-                f"{request.user_prompt}"
+                f"Critique of A: {source}"
             )
 
-        elif step_name == "C":
+        elif step == "C":
+            inputs = request.context.get("inputs", {})
 
             content = (
                 f"[FAKE C by {worker.name}] "
-                f"Revision of the previous results.\n\n"
-                f"{request.user_prompt}"
+                f"Revision using A and B. "
+                f"A={inputs.get('A', '')} | "
+                f"B={inputs.get('B', '')}"
             )
 
-        elif step_name == "D":
+        elif step == "D":
+            source = request.context.get("inputs", {}).get("C", "")
 
             content = (
                 f"[FAKE D by {worker.name}] "
-                f"Critique of the revised result.\n\n"
-                f"{request.user_prompt}"
+                f"Critique of C: {source}"
             )
 
-        elif step_name == "E":
+        elif step == "E":
+            inputs = request.context.get("inputs", {})
 
             content = (
                 f"[FAKE E by {worker.name}] "
-                f"Final result.\n\n"
-                f"{request.user_prompt}"
+                f"Final from C and D. "
+                f"C={inputs.get('C', '')} | "
+                f"D={inputs.get('D', '')}"
             )
 
         else:
-
             content = (
-                f"[FAKE by {worker.name}]\n\n"
+                f"[FAKE {step} by {worker.name}] "
                 f"{request.user_prompt}"
             )
 
@@ -100,17 +93,10 @@ class FakeGenerationClient:
             metadata={
                 "provider": "fake",
                 "model": worker.model,
-                "step": step_name,
+                "step": step,
             },
         )
 
 
-# ------------------------------------------------------------
-# Runtime contract check
-# ------------------------------------------------------------
-#
-# Protocol не требует наследования, поэтому это просто
-# документационная проверка для разработчика.
-#
-
+# Проверяем совместимость реализации с контрактом.
 _: GenerationClient = FakeGenerationClient()
