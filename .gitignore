@@ -1,0 +1,8 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+# Local repair backups
+_repair_backups/
+# Generated test output
+test_output/

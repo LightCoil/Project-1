@@ -1,0 +1,84 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from research_engine.engine.generation_client import GenerationClient
+from research_engine.engine.http_client import HttpGenerationClient
+from research_engine.engine.model_config import (
+    ModelConfig,
+    ModelRegistry,
+)
+from research_engine.engine.worker_runtime import WorkerRuntime
+
+
+@dataclass(frozen=True)
+class RuntimeFactory:
+    """
+    Creates WorkerRuntime instances from registered model
+    configurations.
+    """
+
+    registry: ModelRegistry
+
+    def create(
+        self,
+        *,
+        worker_model: str,
+    ) -> WorkerRuntime:
+        """
+        Create a runtime for a registered model configuration.
+
+        `worker_model` is the ModelConfig.name, not the provider's
+        underlying model identifier.
+        """
+
+        config = self.registry.get(worker_model)
+        client = self._create_client(config)
+
+        return WorkerRuntime(
+            model_config=config,
+            client=client,
+            registry=self.registry,
+        )
+
+    def _create_client(
+        self,
+        config: ModelConfig,
+    ) -> GenerationClient:
+        provider = config.provider.strip().lower()
+
+        if provider == "fake":
+            return _FakeCompatibleClient(config)
+
+        if provider in {
+            "openai-compatible",
+            "openai_compatible",
+        }:
+            return HttpGenerationClient(
+                endpoint=config.endpoint,
+                api_key=config.api_key,
+            )
+
+        raise ValueError(
+            f"Unsupported model provider: {config.provider}"
+        )
+
+
+class _FakeCompatibleClient:
+    """
+    Adapter used by RuntimeFactory.
+
+    A new FakeGenerationClient instance is created for the call,
+    avoiding hidden global state.
+    """
+
+    def __init__(self, config: ModelConfig) -> None:
+        self.config = config
+
+    def generate(self, worker, request):
+        from research_engine.engine.fake_client import (
+            FakeGenerationClient,
+        )
+
+        client = FakeGenerationClient()
+        return client.generate(worker, request)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
+from typing import Any
 
 from research_engine.domain.enums import WorkerRole, WorkerStatus
 from research_engine.domain.ids import new_id
@@ -13,7 +14,7 @@ class Worker:
     role: WorkerRole
     model: str
     endpoint: str = "fake://local"
-    provider: str = "openai-compatible"
+    provider: str = "fake"
     capabilities: list[str] = field(default_factory=list)
     status: WorkerStatus = WorkerStatus.OFFLINE
 
@@ -40,8 +41,8 @@ class Worker:
 
         Если переданы оба, model_name имеет приоритет.
 
-        Пустая модель разрешена на уровне Worker.
-        Проверка наличия модели выполняется WorkerRuntime.
+        Worker допускает пустую модель.
+        Проверка конфигурации выполняется runtime-слоем.
         """
 
         if isinstance(role, str):
@@ -68,7 +69,7 @@ class Worker:
         )
 
         return cls(
-            id=id or new_id(),
+            id=id or new_id("worker"),
             name=name,
             role=role,
             model=resolved_model,
@@ -92,10 +93,6 @@ class Worker:
         self,
         role: WorkerRole | str | None,
     ) -> bool:
-        """
-        Проверяет, может ли Worker выполнить работу указанной роли.
-        """
-
         if self.status is not WorkerStatus.ONLINE:
             return False
 
@@ -124,3 +121,18 @@ class Worker:
 
     def mark_idle(self) -> None:
         self.status = WorkerStatus.ONLINE
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Сериализация Worker для ExperimentStore и snapshot().
+        """
+        return {
+            "id": self.id,
+            "name": self.name,
+            "role": self.role.value,
+            "model": self.model,
+            "endpoint": self.endpoint,
+            "provider": self.provider,
+            "capabilities": list(self.capabilities),
+            "status": self.status.value,
+        }

@@ -14,37 +14,102 @@ from research_engine.engine.model_config import (
 @dataclass
 class WorkerRuntime:
     """
-    Runtime-слой между Worker, ModelRegistry
-    и GenerationClient.
+    Runtime binding between a Worker, its registered ModelConfig,
+    and a generation client.
 
-    Runtime не изменяет ModelConfig в Registry.
+    Supports both compatibility construction modes:
+
+        WorkerRuntime(
+            worker=worker,
+            registry=registry,
+            client=client,
+        )
+
+    and:
+
+        WorkerRuntime(
+            model_config=config,
+            client=client,
+        )
     """
 
-    worker: Worker
-    registry: ModelRegistry | None = None
+    worker: Worker | None = None
+    model_config: ModelConfig | None = None
     client: Any | None = None
+    registry: ModelRegistry | None = None
 
-    def resolve_model(self) -> ModelConfig:
+    @classmethod
+    def create(
+        cls,
+        *,
+        worker: Worker,
+        registry: ModelRegistry,
+        client: Any | None = None,
+    ) -> "WorkerRuntime":
         """
-        Разрешает конфигурацию модели Worker'а.
+        Create a worker-bound runtime.
+
+        The worker must reference a model registered in the
+        supplied ModelRegistry.
         """
+
+        runtime = cls(
+            worker=worker,
+            registry=registry,
+            client=client,
+        )
+
+        runtime.resolve_model()
+
+        return runtime
+
+    def resolve_model(
+        self,
+        worker: Worker | None = None,
+    ) -> ModelConfig:
+        """
+        Resolve the ModelConfig associated with the active worker.
+
+        Resolution order:
+
+        1. explicitly supplied worker;
+        2. runtime-bound worker;
+        3. explicitly supplied model_config.
+        """
+
+        if self.model_config is not None:
+            return self.model_config
+
+        active_worker = (
+            worker
+            if worker is not None
+            else self.worker
+        )
+
+        if active_worker is None:
+            raise ValueError(
+                "Worker is not configured"
+            )
 
         model_name = getattr(
-            self.worker,
+            active_worker,
             "model_name",
             None,
         )
 
+        if callable(model_name):
+            model_name = model_name()
+
         if not model_name:
             model_name = getattr(
-                self.worker,
+                active_worker,
                 "model",
                 "",
             )
 
         if not model_name:
             raise ValueError(
-                "Worker has no configured model"
+                "Worker does not reference a model"
             )
 
         if self.registry is None:
@@ -54,55 +119,94 @@ class WorkerRuntime:
 
         return self.registry.get(model_name)
 
-    def model_config(self) -> ModelConfig:
+    @property
+    def model(self) -> ModelConfig:
         """
-        Совместимый alias.
+        Compatibility alias for the resolved ModelConfig.
         """
+
         return self.resolve_model()
+
+    def model_name(self) -> str:
+        """
+        Return the actual provider model identifier.
+        """
+
+        return self.resolve_model().model
+
+    def provider(self) -> str:
+        """
+        Return the provider identifier.
+        """
+
+        return self.resolve_model().provider
+
+    def endpoint(self) -> str:
+        """
+        Return the configured model endpoint.
+        """
+
+        return self.resolve_model().endpoint
 
     def generation_parameters(self) -> dict[str, Any]:
         """
-        Возвращает независимую копию параметров генерации.
+        Return an independent copy of all generation parameters
+        exposed by the active ModelConfig.
 
-        Изменение результата не меняет Registry.
+        Standard parameters are normalized into the resulting
+        dictionary, while custom parameters are preserved.
         """
 
         config = self.resolve_model()
 
-        parameters = getattr(
+        parameters: dict[str, Any] = {}
+
+        temperature = getattr(
             config,
-            "generation_parameters",
-            {},
+            "temperature",
+            None,
         )
 
-        return deepcopy(parameters)
+        if temperature is not None:
+            parameters["temperature"] = temperature
 
-    def get_generation_parameters(
-        self,
-    ) -> dict[str, Any]:
-        return self.generation_parameters()
+        max_tokens = getattr(
+            config,
+            "max_tokens",
+            None,
+        )
+
+        if max_tokens is not None:
+            parameters["max_tokens"] = max_tokens
+
+        extra = getattr(
+            config,
+            "generation_parameters",
+            None,
+        )
+
+        if isinstance(extra, dict):
+            parameters.update(extra)
+
+        return deepcopy(parameters)
 
     def generate(
         self,
         request: Any,
     ) -> Any:
         """
-        Передаёт generation request клиенту.
-
-        Поддерживается Worker-aware API:
-            client.generate(worker, request)
+        Execute a generation request through the configured client.
         """
 
         if self.client is None:
-            raise ValueError(
-                "Generation client is not configured"
+            raise RuntimeError(
+                "WorkerRuntime has no generation client"
             )
 
-        # Проверяем конфигурацию до generation.
-        config = self.resolve_model()
-
-        # Не мутируем Worker или ModelConfig.
-        _ = config
+        if self.worker is None:
+            raise RuntimeError(
+                "WorkerRuntime has no worker"
+            )
 
         return self.client.generate(
             self.worker,
@@ -111,33 +215,82 @@ class WorkerRuntime:
 
     def to_dict(self) -> dict[str, Any]:
         """
-        Сериализуемая информация о runtime.
+        Serialize the runtime configuration.
+
+        Mutable generation parameters are copied so callers cannot
+        mutate the underlying ModelConfig.
         """
+
+        worker_payload = None
+
+        if self.worker is not None:
+            role = getattr(
+                self.worker,
+                "role",
+                None,
+            )
+
+            if hasattr(role, "value"):
+                role = role.value
+
+            worker_payload = {
+                "id": getattr(
+                    self.worker,
+                    "id",
+                    None,
+                ),
+                "name": getattr(
+                    self.worker,
+                    "name",
+                    None,
+                ),
+                "role": role,
+                "provider": getattr(
+                    self.worker,
+                    "provider",
+                    None,
+                ),
+                "model": getattr(
+                    self.worker,
+                    "model",
+                    None,
+                ),
+                "endpoint": getattr(
+                    self.worker,
+                    "endpoint",
+                    None,
+                ),
+                "capabilities": list(
+                    getattr(
+                        self.worker,
+                        "capabilities",
+                        [],
+                    )
+                    or []
+                ),
+            }
 
         config = self.resolve_model()
 
-        return {
-            "worker_id": self.worker.id,
-            "worker_name": self.worker.name,
-            "model_name": getattr(
-                self.worker,
-                "model_name",
-                self.worker.model,
-            ),
-            "model": getattr(
+        model_payload = {
+            "name": config.name,
+            "provider": config.provider,
+            "model": config.model,
+            "endpoint": config.endpoint,
+            "api_key": getattr(
                 config,
-                "model",
+                "api_key",
                 None,
             ),
-            "provider": getattr(
+            "temperature": getattr(
                 config,
-                "provider",
-                None,
+                "temperature",
+                0.7,
             ),
-            "endpoint": getattr(
+            "max_tokens": getattr(
                 config,
-                "endpoint",
-                None,
+                "max_tokens",
+                4096,
             ),
             "generation_parameters": deepcopy(
                 getattr(
@@ -145,5 +298,15 @@ class WorkerRuntime:
                     "generation_parameters",
                     {},
                 )
+                or {}
+            ),
+        }
+
+        return {
+            "worker": worker_payload,
+            "model": model_payload,
+            "model_config": model_payload,
+            "generation_parameters": (
+                self.generation_parameters()
             ),
         }

@@ -9,51 +9,78 @@ class ModelConfig:
     """
     Immutable configuration of a generation model.
 
-    The configuration describes how a worker should reach a model
-    and which generation parameters should be used by default.
+    `name`
+        Stable configuration name referenced by Worker.model.
+
+    `model`
+        Actual model identifier sent to the provider.
+
+    `generation_parameters`
+        Canonical generation parameter dictionary.
+
+    Legacy convenience fields `api_key`, `temperature`, and `max_tokens`
+    remain supported because older tests/loaders use them directly.
     """
 
     name: str
     provider: str
     model: str
     endpoint: str
-    generation_parameters: dict[str, Any] = field(default_factory=dict)
+
+    api_key: str | None = None
+    temperature: float = 0.7
+    max_tokens: int = 4096
+
+    generation_parameters: dict[str, Any] = field(
+        default_factory=dict
+    )
 
     def __post_init__(self) -> None:
-        if not self.name.strip():
+        if not isinstance(self.name, str) or not self.name.strip():
             raise ValueError("Model name must not be empty")
 
-        if not self.provider.strip():
+        if not isinstance(self.provider, str) or not self.provider.strip():
             raise ValueError("Model provider must not be empty")
 
-        if not self.model.strip():
+        if not isinstance(self.model, str) or not self.model.strip():
             raise ValueError("Model identifier must not be empty")
 
-        if not self.endpoint.strip():
+        if not isinstance(self.endpoint, str) or not self.endpoint.strip():
             raise ValueError("Model endpoint must not be empty")
 
-        # Make a defensive copy even though the dataclass itself is frozen.
-        # This prevents the caller from changing the original dictionary
-        # after construction.
+        if self.api_key is not None and not isinstance(self.api_key, str):
+            raise ValueError("Model api_key must be a string or null")
+
+        if not isinstance(self.temperature, (int, float)):
+            raise ValueError("Model temperature must be numeric")
+
+        if not isinstance(self.max_tokens, int):
+            raise ValueError("Model max_tokens must be an integer")
+
+        parameters = dict(self.generation_parameters)
+
+        # Legacy constructor fields become defaults.
+        parameters.setdefault("temperature", self.temperature)
+        parameters.setdefault("max_tokens", self.max_tokens)
+
         object.__setattr__(
             self,
             "generation_parameters",
-            dict(self.generation_parameters),
+            parameters,
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Serialize the model configuration.
-
-        A copy of generation_parameters is returned so callers cannot
-        accidentally mutate the configuration through the returned dict.
-        """
         return {
             "name": self.name,
             "provider": self.provider,
             "model": self.model,
             "endpoint": self.endpoint,
-            "generation_parameters": dict(self.generation_parameters),
+            "api_key": self.api_key,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "generation_parameters": dict(
+                self.generation_parameters
+            ),
         }
 
 
@@ -62,18 +89,14 @@ class ModelRegistry:
     """
     Registry of configured generation models.
 
-    Models are addressed by their unique configuration name.
+    Models are addressed by their stable configuration name.
     """
 
-    _models: dict[str, ModelConfig] = field(default_factory=dict)
+    _models: dict[str, ModelConfig] = field(
+        default_factory=dict
+    )
 
     def register(self, config: ModelConfig) -> None:
-        """
-        Register a model configuration.
-
-        Duplicate names are rejected because the model name is the
-        stable identifier used by workers.
-        """
         if config.name in self._models:
             raise ValueError(
                 f"Model already registered: {config.name}"
@@ -82,12 +105,6 @@ class ModelRegistry:
         self._models[config.name] = config
 
     def get(self, name: str) -> ModelConfig:
-        """
-        Return a registered model configuration.
-
-        Raises:
-            KeyError: if the model does not exist.
-        """
         try:
             return self._models[name]
         except KeyError as exc:
@@ -96,23 +113,15 @@ class ModelRegistry:
             ) from exc
 
     def has(self, name: str) -> bool:
-        """Return True when a model with this name is registered."""
         return name in self._models
 
     def list(self) -> list[ModelConfig]:
-        """
-        Return all registered model configurations.
-
-        The returned list is independent from the registry.
-        """
         return list(self._models.values())
 
     def names(self) -> list[str]:
-        """Return registered model names."""
         return list(self._models.keys())
 
     def to_dict(self) -> dict[str, dict[str, Any]]:
-        """Serialize the complete registry."""
         return {
             name: config.to_dict()
             for name, config in self._models.items()

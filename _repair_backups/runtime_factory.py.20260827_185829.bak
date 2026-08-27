@@ -1,0 +1,170 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+from research_engine.domain.worker import Worker
+from research_engine.engine.generation_client import GenerationClient
+from research_engine.engine.http_client import HttpGenerationClient
+from research_engine.engine.model_config import (
+    ModelConfig,
+    ModelRegistry,
+)
+from research_engine.engine.worker_runtime import WorkerRuntime
+
+try:
+    from research_engine.engine.fake_client import (
+        FakeCompatibleClient as _FakeCompatibleClient,
+    )
+except ImportError:
+    try:
+        from research_engine.engine.fake_client import (
+            FakeClient as _FakeCompatibleClient,
+        )
+    except ImportError:
+        _FakeCompatibleClient = None
+
+
+@dataclass(frozen=True)
+class RuntimeFactory:
+    """
+    Factory for creating WorkerRuntime instances.
+
+    Supported creation paths:
+
+        factory.create("model-config-name")
+
+        factory.create(worker_model="model-config-name")
+
+        factory.create(worker=worker)
+
+        factory.create(worker,)
+
+    The worker-bound path is the preferred architectural path because
+    WorkerRuntime.generate() requires an active Worker.
+    """
+
+    registry: ModelRegistry
+
+    def create(
+        self,
+        worker: Worker | str | None = None,
+        *,
+        worker_model: str | None = None,
+    ) -> WorkerRuntime:
+        """
+        Create a WorkerRuntime.
+
+        Compatibility rules:
+
+        1. create(worker=worker)
+           -> worker-bound runtime.
+
+        2. create(worker)
+           -> worker-bound runtime.
+
+        3. create("model-name")
+           -> model-config runtime for compatibility.
+
+        4. create(worker_model="model-name")
+           -> model-config runtime for compatibility.
+
+        When a Worker is supplied, its referenced model is authoritative.
+        """
+
+        if isinstance(worker, Worker):
+            if worker_model is not None:
+                raise TypeError(
+                    "Specify either worker or worker_model, not both"
+                )
+
+            config_name = self._worker_model_name(worker)
+            config = self.registry.get(config_name)
+            client = self._create_client(config)
+
+            return WorkerRuntime.create(
+                worker=worker,
+                registry=self.registry,
+                client=client,
+            )
+
+        if worker is not None:
+            if worker_model is not None:
+                raise TypeError(
+                    "Specify either positional worker/model or worker_model, "
+                    "not both"
+                )
+
+            if not isinstance(worker, str):
+                raise TypeError(
+                    "worker must be a Worker, model name string, or None"
+                )
+
+            worker_model = worker
+
+        if worker_model is None:
+            raise TypeError(
+                "RuntimeFactory.create() requires either "
+                "worker or worker_model"
+            )
+
+        config = self.registry.get(worker_model)
+        client = self._create_client(config)
+
+        return WorkerRuntime(
+            model_config=config,
+            client=client,
+            registry=self.registry,
+        )
+
+    @staticmethod
+    def _worker_model_name(worker: Worker) -> str:
+        """
+        Extract the registry model name from a Worker.
+
+        Worker.model_name is preferred when available.
+        Worker.model remains the compatibility fallback.
+        """
+
+        model_name = getattr(worker, "model_name", None)
+
+        if callable(model_name):
+            model_name = model_name()
+
+        if not model_name:
+            model_name = getattr(worker, "model", None)
+
+        if not model_name:
+            raise ValueError(
+                "Worker does not reference a model"
+            )
+
+        return str(model_name)
+
+    def _create_client(
+        self,
+        config: ModelConfig,
+    ) -> GenerationClient:
+        provider = config.provider.strip().lower()
+
+        if provider == "fake":
+            if _FakeCompatibleClient is None:
+                raise RuntimeError(
+                    "Fake provider requested but no compatible fake "
+                    "generation client is available"
+                )
+
+            return _FakeCompatibleClient(config)
+
+        if provider in {
+            "openai-compatible",
+            "openai_compatible",
+        }:
+            return HttpGenerationClient(
+                endpoint=config.endpoint,
+                api_key=config.api_key,
+            )
+
+        raise ValueError(
+            f"Unsupported model provider: {config.provider}"
+        )

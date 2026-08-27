@@ -5,20 +5,24 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from typing import Any
 
+from research_engine.domain.generation import GenerationResult
+
 
 class HttpGenerationClient:
     """
-    HTTP-клиент для OpenAI-compatible generation endpoint.
+    HTTP client for OpenAI-compatible generation endpoints.
 
-    Поддерживает оба варианта:
+    Supported constructors:
 
         HttpGenerationClient(endpoint="http://...")
         HttpGenerationClient(timeout=5)
 
-    и оба варианта generate():
+    Supported generate() APIs:
 
         generate(request)
         generate(worker, request)
+
+    The client always returns GenerationResult.
     """
 
     def __init__(
@@ -35,17 +39,7 @@ class HttpGenerationClient:
         self,
         worker_or_request: Any,
         request: Any | None = None,
-    ) -> Any:
-        """
-        Выполняет generation.
-
-        Старый API:
-            generate(request)
-
-        Worker-aware API:
-            generate(worker, request)
-        """
-
+    ) -> GenerationResult:
         if request is None:
             worker = None
             generation_request = worker_or_request
@@ -83,7 +77,9 @@ class HttpGenerationClient:
                 http_request,
                 timeout=self.timeout,
             ) as response:
-                raw = response.read().decode("utf-8")
+                raw = response.read().decode(
+                    "utf-8"
+                )
 
         except HTTPError as exc:
             body = exc.read().decode(
@@ -92,7 +88,7 @@ class HttpGenerationClient:
             )
 
             raise RuntimeError(
-                f"HTTP generation failed: "
+                "HTTP generation failed: "
                 f"{exc.code} {exc.reason}: {body}"
             ) from exc
 
@@ -101,9 +97,17 @@ class HttpGenerationClient:
                 f"HTTP generation connection failed: {exc}"
             ) from exc
 
-        data = json.loads(raw)
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(
+                "HTTP generation returned invalid JSON"
+            ) from exc
 
-        return self._parse_response(data)
+        return self._parse_response(
+            data,
+            worker=worker,
+        )
 
     # ------------------------------------------------------------------
     # Endpoint
@@ -136,17 +140,16 @@ class HttpGenerationClient:
     ) -> str:
         endpoint = endpoint.rstrip("/")
 
-        # Уже полный OpenAI-compatible endpoint.
         if endpoint.endswith("/chat/completions"):
             return endpoint
 
-        # Если endpoint заканчивается на /v1,
-        # добавляем chat/completions.
         if endpoint.endswith("/v1"):
-            return f"{endpoint}/chat/completions"
+            return (
+                f"{endpoint}/chat/completions"
+            )
 
-        # Для тестовых HTTP-серверов старого проекта
-        # endpoint используется непосредственно.
+        # Legacy mock-server behaviour:
+        # use endpoint directly.
         return endpoint
 
     # ------------------------------------------------------------------
@@ -200,6 +203,8 @@ class HttpGenerationClient:
             )
 
         payload: dict[str, Any] = {
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
             "messages": [
                 {
                     "role": "system",
@@ -233,32 +238,95 @@ class HttpGenerationClient:
     def _parse_response(
         self,
         data: dict[str, Any],
-    ) -> Any:
+        *,
+        worker: Any | None = None,
+    ) -> GenerationResult:
 
-        # OpenAI-compatible response.
+        content: str = ""
+        finish_reason: str = "stop"
+        usage: dict[str, Any] = {}
+        metadata: dict[str, Any] = {}
+
         choices = data.get("choices")
 
-        if choices:
+        if isinstance(choices, list) and choices:
             first = choices[0]
 
-            message = first.get("message")
+            if isinstance(first, dict):
+                finish_reason = (
+                    first.get("finish_reason")
+                    or "stop"
+                )
 
-            if isinstance(message, dict):
-                if "content" in message:
-                    return message["content"]
+                message = first.get("message")
 
-            if "text" in first:
-                return first["text"]
+                if isinstance(message, dict):
+                    value = message.get("content")
 
-        # Некоторые простые mock-серверы проекта
-        # возвращают {"text": "..."}.
-        if "text" in data:
-            return data["text"]
+                    if value is not None:
+                        content = str(value)
 
-        # Ещё один удобный вариант mock API.
-        if "content" in data:
-            return data["content"]
+                if not content and "text" in first:
+                    value = first.get("text")
 
-        # Если сервер вернул неизвестный JSON,
-        # не теряем данные.
-        return data
+                    if value is not None:
+                        content = str(value)
+
+        # Simple mock API:
+        if not content and "text" in data:
+            value = data.get("text")
+
+            if value is not None:
+                content = str(value)
+
+        # Another simple mock API:
+        if not content and "content" in data:
+            value = data.get("content")
+
+            if value is not None:
+                content = str(value)
+
+        if isinstance(data.get("usage"), dict):
+            usage = dict(data["usage"])
+
+        if isinstance(data.get("metadata"), dict):
+            metadata.update(data["metadata"])
+
+        if "model" in data:
+            metadata.setdefault(
+                "model",
+                data["model"],
+            )
+
+        metadata.setdefault(
+            "provider",
+            "openai-compatible",
+        )
+
+        if worker is not None:
+            worker_model = getattr(
+                worker,
+                "model",
+                None,
+            )
+
+            if worker_model:
+                metadata.setdefault(
+                    "model",
+                    worker_model,
+                )
+
+        # Preserve unknown top-level response information
+        # without replacing the typed result contract.
+        if not content and not choices:
+            metadata.setdefault(
+                "raw_response",
+                data,
+            )
+
+        return GenerationResult(
+            content=content,
+            finish_reason=finish_reason,
+            usage=usage,
+            metadata=metadata,
+        )

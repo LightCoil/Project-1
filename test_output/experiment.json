@@ -1,0 +1,658 @@
+{
+  "id": "exp_e08542619ef6db38",
+  "status": "completed",
+  "created_at": "2026-08-27T18:52:54.045433+00:00",
+  "updated_at": "2026-08-27T18:52:54.056579+00:00",
+  "workflow": "A-B-C-D-E",
+  "branch_count": 3,
+  "experiment": {
+    "id": "exp_e08542619ef6db38",
+    "name": "Integration Test",
+    "description": null,
+    "objective": "Проверить полный цикл исследования A→B→C→D→E",
+    "workflow_id": "wf_31847649c57a374b",
+    "research_count": 3,
+    "status": "completed",
+    "created_at": "2026-08-27T18:52:54.045433+00:00",
+    "updated_at": "2026-08-27T18:52:54.056579+00:00"
+  },
+  "workflow_detail": {
+    "id": "wf_31847649c57a374b",
+    "name": "A-B-C-D-E",
+    "description": "Generator → Critic → Revision → Critic → Final",
+    "steps": [
+      {
+        "id": "wfs_5aec94ffec602f1b",
+        "position": 1,
+        "name": "A",
+        "role": "generator",
+        "input_artifacts": [
+          "objective"
+        ],
+        "artifact_type": "thesis",
+        "title": "GENERATOR"
+      },
+      {
+        "id": "wfs_ee2cde8bcddaf2a7",
+        "position": 2,
+        "name": "B",
+        "role": "critic",
+        "input_artifacts": [
+          "A"
+        ],
+        "artifact_type": "critique",
+        "title": "CRITIC"
+      },
+      {
+        "id": "wfs_b5cc5ebbba7f5f28",
+        "position": 3,
+        "name": "C",
+        "role": "generator",
+        "input_artifacts": [
+          "A",
+          "B"
+        ],
+        "artifact_type": "revision",
+        "title": "REVISION"
+      },
+      {
+        "id": "wfs_13412c05d97fef9e",
+        "position": 4,
+        "name": "D",
+        "role": "critic",
+        "input_artifacts": [
+          "C"
+        ],
+        "artifact_type": "critique",
+        "title": "CRITIC"
+      },
+      {
+        "id": "wfs_16c1d0b0c28d9db6",
+        "position": 5,
+        "name": "E",
+        "role": "generator",
+        "input_artifacts": [
+          "C",
+          "D"
+        ],
+        "artifact_type": "final",
+        "title": "FINAL"
+      }
+    ]
+  },
+  "researches": [
+    {
+      "id": "res_db15dd899700e1cd",
+      "experiment_id": "exp_e08542619ef6db38",
+      "number": 1,
+      "status": "completed",
+      "current_step": "E",
+      "started_at": "2026-08-27T18:52:54.045645+00:00",
+      "completed_at": "2026-08-27T18:52:54.048528+00:00",
+      "final_artifact_id": "art_b00f10eb515d36ae",
+      "error": null
+    },
+    {
+      "id": "res_55854fcd2e1528b4",
+      "experiment_id": "exp_e08542619ef6db38",
+      "number": 2,
+      "status": "completed",
+      "current_step": "E",
+      "started_at": "2026-08-27T18:52:54.049116+00:00",
+      "completed_at": "2026-08-27T18:52:54.052073+00:00",
+      "final_artifact_id": "art_20f98691c77fc7bf",
+      "error": null
+    },
+    {
+      "id": "res_101aa851b2f44cda",
+      "experiment_id": "exp_e08542619ef6db38",
+      "number": 3,
+      "status": "completed",
+      "current_step": "E",
+      "started_at": "2026-08-27T18:52:54.052744+00:00",
+      "completed_at": "2026-08-27T18:52:54.056495+00:00",
+      "final_artifact_id": "art_36f02ee206e264e9",
+      "error": null
+    }
+  ],
+  "step_executions": [
+    {
+      "id": "exec_8a66c7bfde4b8352",
+      "research_id": "res_db15dd899700e1cd",
+      "workflow_step_id": "wfs_5aec94ffec602f1b",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.045650+00:00",
+      "completed_at": "2026-08-27T18:52:54.045676+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: A — GENERATOR\nYOUR TASK: Create the initial thesis for the research objective.",
+        "input_steps": []
+      },
+      "output_artifact_id": "art_60314c08328b418f",
+      "error": null
+    },
+    {
+      "id": "exec_9e3952ef231c930d",
+      "research_id": "res_db15dd899700e1cd",
+      "workflow_step_id": "wfs_ee2cde8bcddaf2a7",
+      "status": "completed",
+      "worker_id": "worker_70c189771e6cc4e0",
+      "started_at": "2026-08-27T18:52:54.046342+00:00",
+      "completed_at": "2026-08-27T18:52:54.046375+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a critic. Analyze the provided result rigorously. Point out contradictions, missing pieces, and weak claims.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: B — CRITIC\nYOUR TASK: Critically analyze result A.\n\nRESULT A:\n[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "A"
+        ]
+      },
+      "output_artifact_id": "art_cd0ea89d3ea2f34b",
+      "error": null
+    },
+    {
+      "id": "exec_8d4d0824390ddcd7",
+      "research_id": "res_db15dd899700e1cd",
+      "workflow_step_id": "wfs_b5cc5ebbba7f5f28",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.046987+00:00",
+      "completed_at": "2026-08-27T18:52:54.047002+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: C — REVISION\nYOUR TASK: Revise result A using the critique in B. Produce a corrected version.\n\nRESULT A:\n[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E\n\nRESULT B:\n[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "A",
+          "B"
+        ]
+      },
+      "output_artifact_id": "art_fd703a89681b67dc",
+      "error": null
+    },
+    {
+      "id": "exec_0d3cb8f76a7ab02a",
+      "research_id": "res_db15dd899700e1cd",
+      "workflow_step_id": "wfs_13412c05d97fef9e",
+      "status": "completed",
+      "worker_id": "worker_70c189771e6cc4e0",
+      "started_at": "2026-08-27T18:52:54.047641+00:00",
+      "completed_at": "2026-08-27T18:52:54.047657+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a critic. Analyze the provided result rigorously. Point out contradictions, missing pieces, and weak claims.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: D — CRITIC\nYOUR TASK: Critically analyze the revised result C. Do not use A or B.\n\nRESULT C:\n[FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "C"
+        ]
+      },
+      "output_artifact_id": "art_f4c372a07a9236e9",
+      "error": null
+    },
+    {
+      "id": "exec_449ac6d871ec7b3e",
+      "research_id": "res_db15dd899700e1cd",
+      "workflow_step_id": "wfs_16c1d0b0c28d9db6",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.048241+00:00",
+      "completed_at": "2026-08-27T18:52:54.048256+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: E — FINAL\nYOUR TASK: Produce the final result using the revised version C and critique D.\n\nRESULT C:\n[FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E\n\nRESULT D:\n[FAKE D by Fake Critic] Critique of C: [FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "C",
+          "D"
+        ]
+      },
+      "output_artifact_id": "art_b00f10eb515d36ae",
+      "error": null
+    },
+    {
+      "id": "exec_25e372310ac4db92",
+      "research_id": "res_55854fcd2e1528b4",
+      "workflow_step_id": "wfs_5aec94ffec602f1b",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.049120+00:00",
+      "completed_at": "2026-08-27T18:52:54.049133+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: A — GENERATOR\nYOUR TASK: Create the initial thesis for the research objective.",
+        "input_steps": []
+      },
+      "output_artifact_id": "art_bb04444a394a95d1",
+      "error": null
+    },
+    {
+      "id": "exec_6cc50f95970395eb",
+      "research_id": "res_55854fcd2e1528b4",
+      "workflow_step_id": "wfs_ee2cde8bcddaf2a7",
+      "status": "completed",
+      "worker_id": "worker_70c189771e6cc4e0",
+      "started_at": "2026-08-27T18:52:54.049797+00:00",
+      "completed_at": "2026-08-27T18:52:54.049809+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a critic. Analyze the provided result rigorously. Point out contradictions, missing pieces, and weak claims.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: B — CRITIC\nYOUR TASK: Critically analyze result A.\n\nRESULT A:\n[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "A"
+        ]
+      },
+      "output_artifact_id": "art_bccbbc3f72e0b59f",
+      "error": null
+    },
+    {
+      "id": "exec_2245c6171ffade61",
+      "research_id": "res_55854fcd2e1528b4",
+      "workflow_step_id": "wfs_b5cc5ebbba7f5f28",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.050452+00:00",
+      "completed_at": "2026-08-27T18:52:54.050465+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: C — REVISION\nYOUR TASK: Revise result A using the critique in B. Produce a corrected version.\n\nRESULT A:\n[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E\n\nRESULT B:\n[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "A",
+          "B"
+        ]
+      },
+      "output_artifact_id": "art_4f490a4859fcfa92",
+      "error": null
+    },
+    {
+      "id": "exec_b25e3f7ea52e16d2",
+      "research_id": "res_55854fcd2e1528b4",
+      "workflow_step_id": "wfs_13412c05d97fef9e",
+      "status": "completed",
+      "worker_id": "worker_70c189771e6cc4e0",
+      "started_at": "2026-08-27T18:52:54.051117+00:00",
+      "completed_at": "2026-08-27T18:52:54.051130+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a critic. Analyze the provided result rigorously. Point out contradictions, missing pieces, and weak claims.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: D — CRITIC\nYOUR TASK: Critically analyze the revised result C. Do not use A or B.\n\nRESULT C:\n[FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "C"
+        ]
+      },
+      "output_artifact_id": "art_b591a64e24a725ce",
+      "error": null
+    },
+    {
+      "id": "exec_3cbb79ba36aab07a",
+      "research_id": "res_55854fcd2e1528b4",
+      "workflow_step_id": "wfs_16c1d0b0c28d9db6",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.051776+00:00",
+      "completed_at": "2026-08-27T18:52:54.051789+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: E — FINAL\nYOUR TASK: Produce the final result using the revised version C and critique D.\n\nRESULT C:\n[FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E\n\nRESULT D:\n[FAKE D by Fake Critic] Critique of C: [FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "C",
+          "D"
+        ]
+      },
+      "output_artifact_id": "art_20f98691c77fc7bf",
+      "error": null
+    },
+    {
+      "id": "exec_e4254502d50311bc",
+      "research_id": "res_101aa851b2f44cda",
+      "workflow_step_id": "wfs_5aec94ffec602f1b",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.052748+00:00",
+      "completed_at": "2026-08-27T18:52:54.052761+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: A — GENERATOR\nYOUR TASK: Create the initial thesis for the research objective.",
+        "input_steps": []
+      },
+      "output_artifact_id": "art_3a8d4e727553228d",
+      "error": null
+    },
+    {
+      "id": "exec_ffbf446a686e4d2e",
+      "research_id": "res_101aa851b2f44cda",
+      "workflow_step_id": "wfs_ee2cde8bcddaf2a7",
+      "status": "completed",
+      "worker_id": "worker_70c189771e6cc4e0",
+      "started_at": "2026-08-27T18:52:54.053610+00:00",
+      "completed_at": "2026-08-27T18:52:54.053625+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a critic. Analyze the provided result rigorously. Point out contradictions, missing pieces, and weak claims.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: B — CRITIC\nYOUR TASK: Critically analyze result A.\n\nRESULT A:\n[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "A"
+        ]
+      },
+      "output_artifact_id": "art_3c0ee2cb73bacd42",
+      "error": null
+    },
+    {
+      "id": "exec_da0ab1c45856b870",
+      "research_id": "res_101aa851b2f44cda",
+      "workflow_step_id": "wfs_b5cc5ebbba7f5f28",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.054428+00:00",
+      "completed_at": "2026-08-27T18:52:54.054441+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: C — REVISION\nYOUR TASK: Revise result A using the critique in B. Produce a corrected version.\n\nRESULT A:\n[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E\n\nRESULT B:\n[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "A",
+          "B"
+        ]
+      },
+      "output_artifact_id": "art_907077dce3495695",
+      "error": null
+    },
+    {
+      "id": "exec_7aaa86a12a49ee1e",
+      "research_id": "res_101aa851b2f44cda",
+      "workflow_step_id": "wfs_13412c05d97fef9e",
+      "status": "completed",
+      "worker_id": "worker_70c189771e6cc4e0",
+      "started_at": "2026-08-27T18:52:54.055316+00:00",
+      "completed_at": "2026-08-27T18:52:54.055328+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a critic. Analyze the provided result rigorously. Point out contradictions, missing pieces, and weak claims.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: D — CRITIC\nYOUR TASK: Critically analyze the revised result C. Do not use A or B.\n\nRESULT C:\n[FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "C"
+        ]
+      },
+      "output_artifact_id": "art_73fd8a9244fef36a",
+      "error": null
+    },
+    {
+      "id": "exec_1fab60fdb9b5c8bb",
+      "research_id": "res_101aa851b2f44cda",
+      "workflow_step_id": "wfs_16c1d0b0c28d9db6",
+      "status": "completed",
+      "worker_id": "worker_689f163f9daf0474",
+      "started_at": "2026-08-27T18:52:54.056236+00:00",
+      "completed_at": "2026-08-27T18:52:54.056248+00:00",
+      "input_snapshot": {
+        "system_prompt": "You are a generator. Produce a complete, self-contained result for the assigned step. Do not summarize previous steps unless asked.",
+        "user_prompt": "EXPERIMENT: Integration Test\n\nOBJECTIVE:\nПроверить полный цикл исследования A→B→C→D→E\n\nCURRENT STEP: E — FINAL\nYOUR TASK: Produce the final result using the revised version C and critique D.\n\nRESULT C:\n[FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E\n\nRESULT D:\n[FAKE D by Fake Critic] Critique of C: [FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E",
+        "input_steps": [
+          "C",
+          "D"
+        ]
+      },
+      "output_artifact_id": "art_36f02ee206e264e9",
+      "error": null
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "art_60314c08328b418f",
+      "research_id": "res_db15dd899700e1cd",
+      "step_execution_id": "exec_8a66c7bfde4b8352",
+      "type": "thesis",
+      "created_at": "2026-08-27T18:52:54.045672+00:00",
+      "metadata": {
+        "step": "A",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_cd0ea89d3ea2f34b",
+      "research_id": "res_db15dd899700e1cd",
+      "step_execution_id": "exec_9e3952ef231c930d",
+      "type": "critique",
+      "created_at": "2026-08-27T18:52:54.046372+00:00",
+      "metadata": {
+        "step": "B",
+        "worker_id": "worker_70c189771e6cc4e0",
+        "model": "fake-critic",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_fd703a89681b67dc",
+      "research_id": "res_db15dd899700e1cd",
+      "step_execution_id": "exec_8d4d0824390ddcd7",
+      "type": "revision",
+      "created_at": "2026-08-27T18:52:54.047000+00:00",
+      "metadata": {
+        "step": "C",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_f4c372a07a9236e9",
+      "research_id": "res_db15dd899700e1cd",
+      "step_execution_id": "exec_0d3cb8f76a7ab02a",
+      "type": "critique",
+      "created_at": "2026-08-27T18:52:54.047655+00:00",
+      "metadata": {
+        "step": "D",
+        "worker_id": "worker_70c189771e6cc4e0",
+        "model": "fake-critic",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_b00f10eb515d36ae",
+      "research_id": "res_db15dd899700e1cd",
+      "step_execution_id": "exec_449ac6d871ec7b3e",
+      "type": "final",
+      "created_at": "2026-08-27T18:52:54.048254+00:00",
+      "metadata": {
+        "step": "E",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_4310f3d2581395b4",
+      "research_id": "res_db15dd899700e1cd",
+      "step_execution_id": "exec_449ac6d871ec7b3e",
+      "type": "summary",
+      "created_at": "2026-08-27T18:52:54.048455+00:00",
+      "metadata": {
+        "step": "SUMMARY",
+        "worker_id": null
+      }
+    },
+    {
+      "id": "art_bb04444a394a95d1",
+      "research_id": "res_55854fcd2e1528b4",
+      "step_execution_id": "exec_25e372310ac4db92",
+      "type": "thesis",
+      "created_at": "2026-08-27T18:52:54.049132+00:00",
+      "metadata": {
+        "step": "A",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_bccbbc3f72e0b59f",
+      "research_id": "res_55854fcd2e1528b4",
+      "step_execution_id": "exec_6cc50f95970395eb",
+      "type": "critique",
+      "created_at": "2026-08-27T18:52:54.049808+00:00",
+      "metadata": {
+        "step": "B",
+        "worker_id": "worker_70c189771e6cc4e0",
+        "model": "fake-critic",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_4f490a4859fcfa92",
+      "research_id": "res_55854fcd2e1528b4",
+      "step_execution_id": "exec_2245c6171ffade61",
+      "type": "revision",
+      "created_at": "2026-08-27T18:52:54.050464+00:00",
+      "metadata": {
+        "step": "C",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_b591a64e24a725ce",
+      "research_id": "res_55854fcd2e1528b4",
+      "step_execution_id": "exec_b25e3f7ea52e16d2",
+      "type": "critique",
+      "created_at": "2026-08-27T18:52:54.051129+00:00",
+      "metadata": {
+        "step": "D",
+        "worker_id": "worker_70c189771e6cc4e0",
+        "model": "fake-critic",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_20f98691c77fc7bf",
+      "research_id": "res_55854fcd2e1528b4",
+      "step_execution_id": "exec_3cbb79ba36aab07a",
+      "type": "final",
+      "created_at": "2026-08-27T18:52:54.051788+00:00",
+      "metadata": {
+        "step": "E",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_77f98f57b4e418b0",
+      "research_id": "res_55854fcd2e1528b4",
+      "step_execution_id": "exec_3cbb79ba36aab07a",
+      "type": "summary",
+      "created_at": "2026-08-27T18:52:54.051955+00:00",
+      "metadata": {
+        "step": "SUMMARY",
+        "worker_id": null
+      }
+    },
+    {
+      "id": "art_3a8d4e727553228d",
+      "research_id": "res_101aa851b2f44cda",
+      "step_execution_id": "exec_e4254502d50311bc",
+      "type": "thesis",
+      "created_at": "2026-08-27T18:52:54.052760+00:00",
+      "metadata": {
+        "step": "A",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_3c0ee2cb73bacd42",
+      "research_id": "res_101aa851b2f44cda",
+      "step_execution_id": "exec_ffbf446a686e4d2e",
+      "type": "critique",
+      "created_at": "2026-08-27T18:52:54.053623+00:00",
+      "metadata": {
+        "step": "B",
+        "worker_id": "worker_70c189771e6cc4e0",
+        "model": "fake-critic",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_907077dce3495695",
+      "research_id": "res_101aa851b2f44cda",
+      "step_execution_id": "exec_da0ab1c45856b870",
+      "type": "revision",
+      "created_at": "2026-08-27T18:52:54.054440+00:00",
+      "metadata": {
+        "step": "C",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_73fd8a9244fef36a",
+      "research_id": "res_101aa851b2f44cda",
+      "step_execution_id": "exec_7aaa86a12a49ee1e",
+      "type": "critique",
+      "created_at": "2026-08-27T18:52:54.055327+00:00",
+      "metadata": {
+        "step": "D",
+        "worker_id": "worker_70c189771e6cc4e0",
+        "model": "fake-critic",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_36f02ee206e264e9",
+      "research_id": "res_101aa851b2f44cda",
+      "step_execution_id": "exec_1fab60fdb9b5c8bb",
+      "type": "final",
+      "created_at": "2026-08-27T18:52:54.056247+00:00",
+      "metadata": {
+        "step": "E",
+        "worker_id": "worker_689f163f9daf0474",
+        "model": "fake-generator",
+        "finish_reason": "stop",
+        "usage": {}
+      }
+    },
+    {
+      "id": "art_4ec7b8c6b830780a",
+      "research_id": "res_101aa851b2f44cda",
+      "step_execution_id": "exec_1fab60fdb9b5c8bb",
+      "type": "summary",
+      "created_at": "2026-08-27T18:52:54.056428+00:00",
+      "metadata": {
+        "step": "SUMMARY",
+        "worker_id": null
+      }
+    }
+  ],
+  "workers": [
+    {
+      "id": "worker_689f163f9daf0474",
+      "name": "Fake Generator",
+      "role": "generator",
+      "model": "fake-generator",
+      "endpoint": "fake://generator",
+      "provider": "fake",
+      "capabilities": [],
+      "status": "online"
+    },
+    {
+      "id": "worker_70c189771e6cc4e0",
+      "name": "Fake Critic",
+      "role": "critic",
+      "model": "fake-critic",
+      "endpoint": "fake://critic",
+      "provider": "fake",
+      "capabilities": [],
+      "status": "online"
+    }
+  ],
+  "completed_count": 3
+}
