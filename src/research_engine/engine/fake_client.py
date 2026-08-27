@@ -12,8 +12,7 @@ class FakeGenerationClient:
     """
     Тестовая реализация GenerationClient.
 
-    Никаких сетевых запросов или настоящих моделей.
-    Используется для проверки работы движка.
+    Используется для тестирования Project-1 без реальной модели.
     """
 
     def __init__(
@@ -28,11 +27,10 @@ class FakeGenerationClient:
         worker: Worker,
         request: GenerationRequest,
     ) -> GenerationResult:
-        """
-        Создаёт детерминированный искусственный результат.
-        """
 
-        step_name = request.step_name
+        context = request.context
+
+        step_name = context.get("step_name")
 
         if (
             self.fail_on_step is not None
@@ -42,55 +40,77 @@ class FakeGenerationClient:
                 f"Fake generation failure on step {step_name}"
             )
 
+        # ----------------------------------------------------
+        # Определяем текущий этап.
+        #
+        # Реальный ContextBuilder уже формирует request.context.
+        # Поэтому Fake client не должен самостоятельно строить
+        # контекст исследования.
+        # ----------------------------------------------------
+
         if step_name == "A":
-            text = (
+
+            content = (
                 f"[FAKE A by {worker.name}] "
-                f"Thesis for: {request.objective}"
+                f"Thesis generated from the research objective.\n\n"
+                f"{request.user_prompt}"
             )
 
         elif step_name == "B":
-            source = request.inputs.get("A", "")
 
-            text = (
+            content = (
                 f"[FAKE B by {worker.name}] "
-                f"Critique of A: {source}"
+                f"Critique of the previous result.\n\n"
+                f"{request.user_prompt}"
             )
 
         elif step_name == "C":
-            source_a = request.inputs.get("A", "")
-            source_b = request.inputs.get("B", "")
 
-            text = (
+            content = (
                 f"[FAKE C by {worker.name}] "
-                f"Revision using A and B. "
-                f"A={source_a} | B={source_b}"
+                f"Revision of the previous results.\n\n"
+                f"{request.user_prompt}"
             )
 
         elif step_name == "D":
-            source_c = request.inputs.get("C", "")
 
-            text = (
+            content = (
                 f"[FAKE D by {worker.name}] "
-                f"Critique of C: {source_c}"
+                f"Critique of the revised result.\n\n"
+                f"{request.user_prompt}"
             )
 
         elif step_name == "E":
-            source_c = request.inputs.get("C", "")
-            source_d = request.inputs.get("D", "")
 
-            text = (
+            content = (
                 f"[FAKE E by {worker.name}] "
-                f"Final from C and D. "
-                f"C={source_c} | D={source_d}"
+                f"Final result.\n\n"
+                f"{request.user_prompt}"
             )
 
         else:
-            text = (
-                f"[FAKE {step_name} by {worker.name}] "
-                f"Generated result."
+
+            content = (
+                f"[FAKE by {worker.name}]\n\n"
+                f"{request.user_prompt}"
             )
 
         return GenerationResult(
-            text=text,
-            model=worker.model,
+            content=content,
+            metadata={
+                "provider": "fake",
+                "model": worker.model,
+                "step": step_name,
+            },
         )
+
+
+# ------------------------------------------------------------
+# Runtime contract check
+# ------------------------------------------------------------
+#
+# Protocol не требует наследования, поэтому это просто
+# документационная проверка для разработчика.
+#
+
+_: GenerationClient = FakeGenerationClient()
