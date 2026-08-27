@@ -125,7 +125,7 @@ class WorkerExecutor:
         )
 
         execution_request = replace(
-            request,
+            forwarded_request,
             generation_parameters=deepcopy(
                 forwarded_request.generation_parameters
             ),
