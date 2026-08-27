@@ -1,67 +1,81 @@
 from __future__ import annotations
 
-from typing import Any
+import json
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-import json
-
-from research_engine.domain.generation import (
-    GenerationRequest,
-    GenerationResult,
-)
-from research_engine.domain.worker import Worker
+from typing import Any
 
 
 class HttpGenerationClient:
     """
-    HTTP implementation of GenerationClient.
+    HTTP-клиент для OpenAI-compatible generation endpoint.
 
-    Project-1 knows nothing about the model provider.
-    A Worker only supplies an HTTP endpoint.
+    Поддерживает оба варианта:
+
+        HttpGenerationClient(endpoint="http://...")
+        HttpGenerationClient(timeout=5)
+
+    и оба варианта generate():
+
+        generate(request)
+        generate(worker, request)
     """
 
     def __init__(
         self,
-        *,
+        endpoint: str | None = None,
+        api_key: str | None = None,
         timeout: float = 120.0,
     ) -> None:
-        if timeout <= 0:
-            raise ValueError("timeout must be greater than 0")
-
+        self.endpoint = endpoint
+        self.api_key = api_key
         self.timeout = timeout
 
     def generate(
         self,
-        worker: Worker,
-        request: GenerationRequest,
-    ) -> GenerationResult:
+        worker_or_request: Any,
+        request: Any | None = None,
+    ) -> Any:
+        """
+        Выполняет generation.
 
-        if not worker.endpoint:
-            raise ValueError(
-                f"Worker {worker.id} has no endpoint"
-            )
+        Старый API:
+            generate(request)
 
-        payload = {
-            "system_prompt": request.system_prompt,
-            "user_prompt": request.user_prompt,
-            "temperature": request.temperature,
-            "max_tokens": request.max_tokens,
-            "context": request.context,
+        Worker-aware API:
+            generate(worker, request)
+        """
+
+        if request is None:
+            worker = None
+            generation_request = worker_or_request
+        else:
+            worker = worker_or_request
+            generation_request = request
+
+        endpoint = self._resolve_endpoint(worker)
+
+        payload = self._build_payload(
+            worker=worker,
+            request=generation_request,
+        )
+
+        url = self._generation_url(endpoint)
+
+        headers = {
+            "Content-Type": "application/json",
         }
 
-        body = json.dumps(
-            payload,
-            ensure_ascii=False,
-        ).encode("utf-8")
+        if self.api_key:
+            headers["Authorization"] = (
+                f"Bearer {self.api_key}"
+            )
 
         http_request = Request(
-            worker.endpoint,
-            data=body,
+            url=url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers=headers,
             method="POST",
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
         )
 
         try:
@@ -69,62 +83,182 @@ class HttpGenerationClient:
                 http_request,
                 timeout=self.timeout,
             ) as response:
-
-                raw = response.read()
+                raw = response.read().decode("utf-8")
 
         except HTTPError as exc:
+            body = exc.read().decode(
+                "utf-8",
+                errors="replace",
+            )
+
             raise RuntimeError(
-                f"Generation endpoint returned HTTP "
-                f"{exc.code}: {exc.reason}"
+                f"HTTP generation failed: "
+                f"{exc.code} {exc.reason}: {body}"
             ) from exc
 
         except URLError as exc:
             raise RuntimeError(
-                f"Generation endpoint is unreachable: "
-                f"{exc.reason}"
+                f"HTTP generation connection failed: {exc}"
             ) from exc
 
-        except TimeoutError as exc:
-            raise RuntimeError(
-                "Generation endpoint timed out"
-            ) from exc
+        data = json.loads(raw)
 
-        try:
-            result: dict[str, Any] = json.loads(
-                raw.decode("utf-8")
-            )
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise RuntimeError(
-                "Generation endpoint returned invalid JSON"
-            ) from exc
+        return self._parse_response(data)
 
-        content = result.get("content")
+    # ------------------------------------------------------------------
+    # Endpoint
+    # ------------------------------------------------------------------
 
-        if not isinstance(content, str):
-            raise RuntimeError(
-                "Generation endpoint response must contain "
-                "a string field 'content'"
+    def _resolve_endpoint(
+        self,
+        worker: Any | None,
+    ) -> str:
+        if worker is not None:
+            worker_endpoint = getattr(
+                worker,
+                "endpoint",
+                None,
             )
 
-        finish_reason = result.get(
-            "finish_reason",
-            "stop",
+            if worker_endpoint:
+                return str(worker_endpoint)
+
+        if self.endpoint:
+            return self.endpoint
+
+        raise ValueError(
+            "HTTP generation endpoint is not configured"
         )
 
-        if not isinstance(finish_reason, str):
-            finish_reason = str(finish_reason)
+    def _generation_url(
+        self,
+        endpoint: str,
+    ) -> str:
+        endpoint = endpoint.rstrip("/")
 
-        usage = result.get("usage", {})
-        if not isinstance(usage, dict):
-            usage = {}
+        # Уже полный OpenAI-compatible endpoint.
+        if endpoint.endswith("/chat/completions"):
+            return endpoint
 
-        metadata = result.get("metadata", {})
-        if not isinstance(metadata, dict):
-            metadata = {}
+        # Если endpoint заканчивается на /v1,
+        # добавляем chat/completions.
+        if endpoint.endswith("/v1"):
+            return f"{endpoint}/chat/completions"
 
-        return GenerationResult(
-            content=content,
-            finish_reason=finish_reason,
-            usage=usage,
-            metadata=metadata,
+        # Для тестовых HTTP-серверов старого проекта
+        # endpoint используется непосредственно.
+        return endpoint
+
+    # ------------------------------------------------------------------
+    # Payload
+    # ------------------------------------------------------------------
+
+    def _build_payload(
+        self,
+        *,
+        worker: Any | None,
+        request: Any,
+    ) -> dict[str, Any]:
+
+        system_prompt = getattr(
+            request,
+            "system_prompt",
+            "",
         )
+
+        user_prompt = getattr(
+            request,
+            "user_prompt",
+            "",
+        )
+
+        temperature = getattr(
+            request,
+            "temperature",
+            None,
+        )
+
+        max_tokens = getattr(
+            request,
+            "max_tokens",
+            None,
+        )
+
+        context = getattr(
+            request,
+            "context",
+            None,
+        )
+
+        model = None
+
+        if worker is not None:
+            model = getattr(
+                worker,
+                "model",
+                None,
+            )
+
+        payload: dict[str, Any] = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                },
+            ],
+        }
+
+        if model:
+            payload["model"] = model
+
+        if temperature is not None:
+            payload["temperature"] = temperature
+
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
+
+        if context:
+            payload["context"] = context
+
+        return payload
+
+    # ------------------------------------------------------------------
+    # Response
+    # ------------------------------------------------------------------
+
+    def _parse_response(
+        self,
+        data: dict[str, Any],
+    ) -> Any:
+
+        # OpenAI-compatible response.
+        choices = data.get("choices")
+
+        if choices:
+            first = choices[0]
+
+            message = first.get("message")
+
+            if isinstance(message, dict):
+                if "content" in message:
+                    return message["content"]
+
+            if "text" in first:
+                return first["text"]
+
+        # Некоторые простые mock-серверы проекта
+        # возвращают {"text": "..."}.
+        if "text" in data:
+            return data["text"]
+
+        # Ещё один удобный вариант mock API.
+        if "content" in data:
+            return data["content"]
+
+        # Если сервер вернул неизвестный JSON,
+        # не теряем данные.
+        return data
