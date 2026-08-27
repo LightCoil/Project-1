@@ -11,16 +11,17 @@ from research_engine.domain.worker import Worker
 
 class GenerationClient(Protocol):
     """
-    Абстрактный интерфейс генерации.
+    Контракт клиента генерации.
 
-    Scheduler работает с этим контрактом и не знает,
-    каким образом фактически вызывается модель.
+    Scheduler зависит только от этого интерфейса.
+    Конкретная реализация может работать через:
 
-    Реализация может быть:
-      - FakeGenerationClient для тестов;
-      - HTTP-клиентом;
-      - клиентом локального inference-сервера;
-      - любым другим совместимым backend.
+    - FakeGenerationClient;
+    - HTTP API;
+    - локальный inference server;
+    - другой backend.
+
+    Project-1 не должен зависеть от конкретной модели.
     """
 
     def generate(
@@ -29,6 +30,6 @@ class GenerationClient(Protocol):
         request: GenerationRequest,
     ) -> GenerationResult:
         """
-        Выполнить генерацию через указанного Worker.
+        Выполнить генерацию и вернуть GenerationResult.
         """
         ...
