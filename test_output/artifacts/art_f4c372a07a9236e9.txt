@@ -1,1 +1,0 @@
-[FAKE D by Fake Critic] Critique of C: [FAKE C by Fake Generator] Revision using A and B. A=[FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E | B=[FAKE B by Fake Critic] Critique of A: [FAKE A by Fake Generator] Thesis for: Проверить полный цикл исследования A→B→C→D→E
