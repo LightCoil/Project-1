@@ -1,99 +1,149 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
-from research_engine.domain.generation import GenerationRequest, GenerationResult
 from research_engine.domain.worker import Worker
-from research_engine.engine.generation_client import GenerationClient
-from research_engine.engine.model_config import ModelConfig, ModelRegistry
+from research_engine.engine.model_config import (
+    ModelConfig,
+    ModelRegistry,
+)
 
 
-@dataclass(frozen=True)
+@dataclass
 class WorkerRuntime:
     """
-    Connects a domain Worker with the configured model and
-    a GenerationClient.
+    Runtime-слой между Worker, ModelRegistry
+    и GenerationClient.
 
-    Worker remains a domain object.
-    ModelRegistry remains the source of model configuration.
-    GenerationClient remains responsible for actual generation.
+    Runtime не изменяет ModelConfig в Registry.
     """
 
     worker: Worker
-    model: ModelConfig
-    client: GenerationClient
+    registry: ModelRegistry | None = None
+    client: Any | None = None
 
-    @classmethod
-    def create(
-        cls,
-        *,
-        worker: Worker,
-        registry: ModelRegistry,
-        client: GenerationClient,
-    ) -> "WorkerRuntime":
+    def resolve_model(self) -> ModelConfig:
         """
-        Build a runtime worker from the worker's configured model.
+        Разрешает конфигурацию модели Worker'а.
+        """
 
-        The Worker must reference a model by name. The registry resolves
-        that name into the complete ModelConfig.
-        """
-        model_name = worker.model
+        model_name = getattr(
+            self.worker,
+            "model_name",
+            None,
+        )
+
+        if not model_name:
+            model_name = getattr(
+                self.worker,
+                "model",
+                "",
+            )
 
         if not model_name:
             raise ValueError(
-                f"Worker {worker.id} does not reference a model"
+                "Worker has no configured model"
             )
 
-        model = registry.get(model_name)
+        if self.registry is None:
+            raise ValueError(
+                "Model registry is not configured"
+            )
 
-        return cls(
-            worker=worker,
-            model=model,
-            client=client,
+        return self.registry.get(model_name)
+
+    def model_config(self) -> ModelConfig:
+        """
+        Совместимый alias.
+        """
+        return self.resolve_model()
+
+    def generation_parameters(self) -> dict[str, Any]:
+        """
+        Возвращает независимую копию параметров генерации.
+
+        Изменение результата не меняет Registry.
+        """
+
+        config = self.resolve_model()
+
+        parameters = getattr(
+            config,
+            "generation_parameters",
+            {},
         )
+
+        return deepcopy(parameters)
+
+    def get_generation_parameters(
+        self,
+    ) -> dict[str, Any]:
+        return self.generation_parameters()
 
     def generate(
         self,
-        request: GenerationRequest,
-    ) -> GenerationResult:
+        request: Any,
+    ) -> Any:
         """
-        Execute one generation using this worker's configured model.
+        Передаёт generation request клиенту.
 
-        The current GenerationClient contract accepts a Worker, while
-        model-specific configuration belongs to the runtime layer.
-        The client therefore receives the domain Worker and the runtime
-        validates that the selected model is the one configured for it.
+        Поддерживается Worker-aware API:
+            client.generate(worker, request)
         """
+
+        if self.client is None:
+            raise ValueError(
+                "Generation client is not configured"
+            )
+
+        # Проверяем конфигурацию до generation.
+        config = self.resolve_model()
+
+        # Не мутируем Worker или ModelConfig.
+        _ = config
+
         return self.client.generate(
             self.worker,
             request,
         )
 
-    def model_name(self) -> str:
-        """Return the configured model identifier."""
-        return self.model.model
-
-    def endpoint(self) -> str:
-        """Return the configured model endpoint."""
-        return self.model.endpoint
-
-    def provider(self) -> str:
-        """Return the configured provider."""
-        return self.model.provider
-
-    def generation_parameters(self) -> dict[str, Any]:
-        """
-        Return generation parameters defined by ModelConfig.
-
-        A copy is returned so callers cannot mutate the configuration
-        stored in the registry through this method.
-        """
-        return dict(self.model.generation_parameters)
-
     def to_dict(self) -> dict[str, Any]:
-        """Return a serializable runtime description."""
+        """
+        Сериализуемая информация о runtime.
+        """
+
+        config = self.resolve_model()
+
         return {
-            "worker": self.worker.to_dict(),
-            "model": self.model.to_dict(),
+            "worker_id": self.worker.id,
+            "worker_name": self.worker.name,
+            "model_name": getattr(
+                self.worker,
+                "model_name",
+                self.worker.model,
+            ),
+            "model": getattr(
+                config,
+                "model",
+                None,
+            ),
+            "provider": getattr(
+                config,
+                "provider",
+                None,
+            ),
+            "endpoint": getattr(
+                config,
+                "endpoint",
+                None,
+            ),
+            "generation_parameters": deepcopy(
+                getattr(
+                    config,
+                    "generation_parameters",
+                    {},
+                )
+            ),
         }
