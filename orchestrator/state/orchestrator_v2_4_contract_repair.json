@@ -1,0 +1,56 @@
+{
+  "protocol_version": "2.4",
+  "timestamp": "2026-08-28T12:18:42.732161+00:00",
+  "project": "/content/Project-1",
+  "runtime_class": "OrchestratorRuntime",
+  "available_models": [
+    {
+      "name": "local_reasoning",
+      "description": "Local analytical reasoning model.",
+      "capabilities": [
+        "reasoning",
+        "analysis",
+        "philosophy"
+      ]
+    },
+    {
+      "name": "local_coder",
+      "description": "Local programming model.",
+      "capabilities": [
+        "code",
+        "debugging",
+        "software_engineering"
+      ]
+    }
+  ],
+  "distributed_decision": {
+    "mode": "distributed",
+    "assignments": [
+      {
+        "model": "local_reasoning",
+        "task": "Analyze the philosophical structure of the thesis.",
+        "expected_output": "Core distinctions and arguments."
+      },
+      {
+        "model": "local_coder",
+        "task": "Determine whether the proposed reasoning workflow has any algorithmic ambiguity.",
+        "expected_output": "Potential structural issues."
+      }
+    ],
+    "final_action": "execute_models",
+    "reason": "Both models have relevant capabilities."
+  },
+  "zero_model_decision": {
+    "mode": "chatgpt_only",
+    "assignments": [],
+    "final_action": "execute_directly",
+    "reason": "No executable models are available.",
+    "task": "Проанализировать тезис «Свобода возможна без знания»."
+  },
+  "tests": {
+    "planner_prompt": true,
+    "decision_normalization": true,
+    "zero_model_fallback": true,
+    "unavailable_model_protection": true
+  }
+}

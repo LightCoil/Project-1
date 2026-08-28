@@ -1,0 +1,18 @@
+{
+  "protocol_version": "2.7-repair",
+  "timestamp_utc": "2026-08-28T12:22:59.055459+00:00",
+  "phase": "execution_layer",
+  "runtime_class": "OrchestratorRuntime",
+  "executor_class": "ModelExecutor",
+  "registered_models": [
+    "local_reasoning",
+    "local_coder"
+  ],
+  "runtime_executor_attached": true,
+  "assignment_execution": true,
+  "unavailable_model_protection": true,
+  "provider_error_boundary": true,
+  "zero_model_path": true,
+  "ui_modified": false,
+  "external_api": false
+}

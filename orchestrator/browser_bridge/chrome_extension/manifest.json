@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "PROJECT-1 Browser Chat Bridge",
+  "version": "4.7.0",
+  "description": "PROJECT-1 bridge between the orchestrator and visible ChatGPT Web.",
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://*.trycloudflare.com/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

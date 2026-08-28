@@ -1,0 +1,15 @@
+{
+  "version": "4.5.1",
+  "relay_port": 8767,
+  "public_relay_url": "https://batteries-fabrics-pleased-mitchell.trycloudflare.com",
+  "hostname": "batteries-fabrics-pleased-mitchell.trycloudflare.com",
+  "dns_verified": true,
+  "public_health_verified": true,
+  "extension_default_relay": "https://batteries-fabrics-pleased-mitchell.trycloudflare.com",
+  "chatgpt_transport": "visible_web_chat",
+  "chatgpt_api": false,
+  "chatgpt_api_key": false,
+  "chatgpt_token": false,
+  "manual_json": false,
+  "manual_paste": false
+}

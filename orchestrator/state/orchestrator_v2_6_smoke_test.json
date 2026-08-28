@@ -1,0 +1,16 @@
+{
+  "protocol_version": "2.6",
+  "status": "ready",
+  "chatgpt_adapter": {
+    "created": true,
+    "structured_decisions": true,
+    "json_normalization": true,
+    "transport_boundary": true,
+    "network_enabled": false
+  },
+  "runtime_integration": true,
+  "replanning_supported": true,
+  "zero_model_mode": "chatgpt_only",
+  "ui_modified": false,
+  "ae_pipeline_modified": false
+}

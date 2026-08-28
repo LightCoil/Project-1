@@ -1,0 +1,25 @@
+{
+  "protocol_version": "2.2",
+  "timestamp": "2026-08-28T12:11:41.179215",
+  "model_distribution_test": {
+    "status": "finished",
+    "planner_calls": 1,
+    "results": [
+      {
+        "model": "local_reasoning",
+        "task": "Analyze the core structure of the task.",
+        "result": "[STUB:local_reasoning] Analyze the core structure of the task."
+      },
+      {
+        "model": "local_coder",
+        "task": "Check whether a technical implementation is required.",
+        "result": "[STUB:local_coder] Check whether a technical implementation is required."
+      }
+    ]
+  },
+  "zero_model_test": {
+    "status": "chatgpt_only",
+    "planner_calls": 1,
+    "chatgpt_task": "Выполни задачу самостоятельно. Дополнительных моделей нет.\n\nЗадача пользователя:\nSolve the research task directly."
+  }
+}

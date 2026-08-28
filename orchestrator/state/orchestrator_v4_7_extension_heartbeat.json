@@ -1,0 +1,17 @@
+{
+  "version": "4.7",
+  "relay_host": "0.0.0.0",
+  "relay_port": 8767,
+  "public_relay": "https://batteries-fabrics-pleased-mitchell.trycloudflare.com",
+  "target": "ChatGPT Web",
+  "heartbeat_interval_seconds": 2,
+  "browser_poll": "/browser/poll",
+  "browser_response": "/browser/response",
+  "chatgpt_api_used": false,
+  "chatgpt_api_key_used": false,
+  "chatgpt_token_extraction": false,
+  "manual_json": false,
+  "manual_paste": false,
+  "extension_path": "/content/Project-1/orchestrator/browser_bridge/chrome_extension",
+  "backup": "/content/Project-1/orchestrator/browser_bridge/backups/chrome_extension_before_v4_7_20260828_130859"
+}

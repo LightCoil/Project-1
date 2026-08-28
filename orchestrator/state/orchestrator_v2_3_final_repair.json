@@ -1,0 +1,8 @@
+{
+  "protocol_version": "2.3",
+  "runtime_class": "OrchestratorRuntime",
+  "zero_model_fallback": true,
+  "unavailable_model_protection": true,
+  "runtime_api_verified": true,
+  "timestamp": "2026-08-28T12:15:21.813049"
+}

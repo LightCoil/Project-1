@@ -1,0 +1,23 @@
+{
+  "version": "4.8",
+  "relay_host": "0.0.0.0",
+  "relay_port": 8767,
+  "public_relay": "https://protected-less-ratios-township.trycloudflare.com",
+  "target": "ChatGPT Web",
+  "browser_poll": "/browser/poll",
+  "browser_response": "/browser/response",
+  "heartbeat_interval_seconds": 2,
+  "chatgpt_api_used": false,
+  "chatgpt_token_extraction": false,
+  "manual_json": false,
+  "manual_paste": false,
+  "gemma_to_chatgpt": true,
+  "chatgpt_to_orchestrator": true,
+  "extension_path": "/content/Project-1/orchestrator/browser_bridge/chrome_extension",
+  "backup": "/content/Project-1/orchestrator/browser_bridge/backups/chrome_extension_before_v4_8_20260828_131141",
+  "local_base_url": "http://127.0.0.1:8767",
+  "public_poll": "https://protected-less-ratios-township.trycloudflare.com/browser/poll",
+  "public_response": "https://protected-less-ratios-township.trycloudflare.com/browser/response",
+  "verified": true,
+  "verified_at": 1787923986.0555272
+}

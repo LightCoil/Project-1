@@ -1,0 +1,16 @@
+{
+  "version": "4.0",
+  "component": "browser_chat_bridge",
+  "relay": {
+    "host": "127.0.0.1",
+    "port": 8765,
+    "token_configured": true
+  },
+  "extension": "/content/Project-1/orchestrator/browser_bridge/chrome_extension",
+  "chatgpt_transport": "browser",
+  "api_key_used": false,
+  "external_chatgpt_request_made": false,
+  "orchestrator_connected": false,
+  "ui_modified": false,
+  "ae_pipeline_modified": false
+}

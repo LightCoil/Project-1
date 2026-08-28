@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PROJECT-1 Bridge</title>
+
+<style>
+body {
+    width: 320px;
+    padding: 16px;
+    font-family: Arial, sans-serif;
+}
+
+h3 {
+    margin-top: 0;
+}
+
+input {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    padding: 7px;
+}
+
+button {
+    width: 100%;
+    padding: 8px;
+    cursor: pointer;
+}
+
+#status {
+    margin-top: 12px;
+    white-space: pre-wrap;
+}
+</style>
+</head>
+
+<body>
+
+<h3>PROJECT-1 Browser Bridge</h3>
+
+<label>Relay URL</label>
+<input
+    id="relay"
+    value="http://127.0.0.1:8765"
+/>
+
+<label>Bridge token</label>
+<input
+    id="token"
+    type="password"
+/>
+
+<button id="save">
+    Save
+</button>
+
+<div id="status">
+    Not configured
+</div>
+
+<script src="popup.js"></script>
+
+</body>
+</html>
