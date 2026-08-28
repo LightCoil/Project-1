@@ -1,285 +1,51 @@
 
 (() => {
-    "use strict";
 
-    // ================================================================
-    // PROJECT1_RUNTIME_TRACE_4927
-    // TEMPORARY DIAGNOSTIC INSTRUMENTATION
-    // ================================================================
+    const TAG = "[PROJECT-1 CONTENT]";
 
-    const PROJECT1_TRACE_PREFIX =
-        "[PROJECT-1][RUNTIME-TRACE]";
+    let activeRequest = null;
+    let observer = null;
+    let responseTimer = null;
 
-    function project1Trace(stage, details = "") {
-        try {
-            console.log(
-                PROJECT1_TRACE_PREFIX,
-                stage,
-                details
-            );
-        } catch (_) {
-            // Diagnostics must never break the bridge.
-        }
+    function log(...args) {
+        console.log(TAG, ...args);
     }
 
-
-    /*
-     * PROJECT-1 Browser Chat Bridge v4.8
-     *
-     * Architecture:
-     *
-     *   PROJECT-1
-     *       ↓
-     *   /browser/poll
-     *       ↓
-     *   Chrome extension
-     *       ↓
-     *   visible ChatGPT Web DOM
-     *       ↓
-     *   /browser/response
-     *       ↓
-     *   PROJECT-1
-     *
-     * No ChatGPT API.
-     * No OpenAI API.
-     * No ChatGPT authentication token extraction.
-     */
-
-    const DEFAULT_RELAY =
-        "https://protected-less-ratios-township.trycloudflare.com";
-
-    let relayUrl = DEFAULT_RELAY;
-    let bridgeToken = "";
-
-    let processing = false;
-    let lastRequestId = null;
-
-    const HEARTBEAT_MS = 2000;
-    const RESPONSE_TIMEOUT_MS = 180000;
-    const STABLE_MS = 2500;
-
-    // ------------------------------------------------------------
-    // STORAGE
-    // ------------------------------------------------------------
-
-    async function loadConfiguration() {
-
-        try {
-
-            const data =
-                await chrome.storage.local.get([
-                    "relayUrl",
-                    "token",
-                ]);
-
-            relayUrl =
-                String(
-                    data.relayUrl ||
-                    DEFAULT_RELAY
-                ).replace(/\/+$/, "");
-
-            bridgeToken =
-                String(
-                    data.token || ""
-                ).trim();
-
-        } catch (error) {
-
-            console.error(
-                "[PROJECT-1] configuration error",
-                error
-            );
-        }
+    function normalizeText(text) {
+        return String(text || "")
+            .replace(/\u200b/g, "")
+            .replace(/\r/g, "")
+            .trim();
     }
 
-    // ------------------------------------------------------------
-    // AUTHENTICATED FETCH
-    // ------------------------------------------------------------
-
-    async function authenticatedFetch(
-        path,
-        options = {}
-    ) {
-
-        if (!relayUrl) {
-            throw new Error(
-                "Relay URL is empty."
-            );
-        }
-
-        if (!bridgeToken) {
-            throw new Error(
-                "PROJECT-1 bridge token is empty."
-            );
-        }
-
-        const headers = {
-            ...(options.headers || {}),
-            "X-Bridge-Token": bridgeToken,
-        };
-
-        return fetch(
-            relayUrl + path,
-            {
-                ...options,
-                headers,
-            }
-        );
-    }
-
-    // ------------------------------------------------------------
-    // HEARTBEAT / POLL
-    // ------------------------------------------------------------
-
-    async function pollRelay() {
-
-        if (processing) {
-            return;
-        }
-
-        try {
-
-            const response =
-                await authenticatedFetch(
-                    "/browser/poll",
-                    {
-                        method: "GET",
-                        cache: "no-store",
-                    }
-                );
-
-            if (!response.ok) {
-                throw new Error(
-                    `HTTP ${response.status}`
-                );
-            }
-
-            const data =
-                await response.json();
-
-            if (!data || !data.ok) {
-                return;
-            }
-
-            if (
-                data.pending &&
-                data.request
-            ) {
-
-                const request =
-                    data.request;
-
-                if (
-                    request.id &&
-                    request.id !== lastRequestId
-                ) {
-
-                    lastRequestId =
-                        request.id;
-
-                    await processRequest(
-                        request
-                    );
-                }
-            }
-
-        } catch (error) {
-
-            /*
-             * Network failures are intentionally
-             * non-fatal. The next heartbeat retries.
-             */
-
-            console.debug(
-                "[PROJECT-1] relay poll:",
-                error
-            );
-        }
-    }
-
-    // ------------------------------------------------------------
-    // CHATGPT DOM HELPERS
-    // ------------------------------------------------------------
-
-    function getPromptElement() {
+    function findComposer() {
 
         const selectors = [
-            "#prompt-textarea",
-            "textarea[data-testid='text-input']",
-            "textarea[placeholder*='Message']",
+            "textarea#prompt-textarea",
+            "textarea[placeholder*='Ask']",
             "textarea",
-            "[contenteditable='true'][role='textbox']",
+            "[contenteditable='true']"
         ];
 
-        for (
-            const selector of selectors
-        ) {
+        for (const selector of selectors) {
+            const nodes =
+                document.querySelectorAll(selector);
 
-            const element =
-                document.querySelector(
-                    selector
-                );
+            for (const node of nodes) {
 
-            if (
-                element &&
-                isVisible(element)
-            ) {
-                return element;
-            }
-        }
+                const rect =
+                    node.getBoundingClientRect();
 
-        return null;
-    }
-
-    function isVisible(element) {
-
-        if (!element) {
-            return false;
-        }
-
-        const style =
-            window.getComputedStyle(
-                element
-            );
-
-        const rect =
-            element.getBoundingClientRect();
-
-        return (
-            style.display !== "none" &&
-            style.visibility !== "hidden" &&
-            rect.width > 0 &&
-            rect.height > 0
-        );
-    }
-
-    function getSendButton() {
-
-        const selectors = [
-            "button[data-testid='send-button']",
-            "button[aria-label*='Send']",
-            "button[aria-label*='send']",
-            "button[type='submit']",
-        ];
-
-        for (
-            const selector of selectors
-        ) {
-
-            const buttons =
-                document.querySelectorAll(
-                    selector
-                );
-
-            for (
-                const button of buttons
-            ) {
+                const style =
+                    window.getComputedStyle(node);
 
                 if (
-                    isVisible(button) &&
-                    !button.disabled
+                    rect.width > 0 &&
+                    rect.height > 0 &&
+                    style.visibility !== "hidden" &&
+                    style.display !== "none"
                 ) {
-                    return button;
+                    return node;
                 }
             }
         }
@@ -287,42 +53,117 @@
         return null;
     }
 
-    // ------------------------------------------------------------
-    // SET CHATGPT INPUT
-    // ------------------------------------------------------------
+    function findSendButton() {
 
-    function setPromptValue(
-        element,
-        text
-    ) {
+        const selectors = [
+            "button[aria-label='Send message']",
+            "button[data-testid*='send']",
+            "button[aria-label*='Send']"
+        ];
+
+        for (const selector of selectors) {
+
+            const node =
+                document.querySelector(selector);
+
+            if (!node) {
+                continue;
+            }
+
+            const rect =
+                node.getBoundingClientRect();
+
+            if (
+                rect.width > 0 &&
+                rect.height > 0
+            ) {
+                return node;
+            }
+        }
+
+        return null;
+    }
+
+    function assistantMessages() {
+
+        const selectors = [
+            "[data-message-author-role='assistant']",
+            "[data-message-author-role='assistant'] div",
+            "article"
+        ];
+
+        const result = [];
+
+        for (const selector of selectors) {
+
+            const nodes =
+                document.querySelectorAll(selector);
+
+            for (const node of nodes) {
+
+                const text =
+                    normalizeText(
+                        node.innerText
+                    );
+
+                if (text.length > 0) {
+                    result.push(node);
+                }
+            }
+
+            if (result.length > 0) {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    function latestAssistantText() {
+
+        const nodes =
+            assistantMessages();
+
+        if (!nodes.length) {
+            return "";
+        }
+
+        return normalizeText(
+            nodes[nodes.length - 1].innerText
+        );
+    }
+
+    function assistantSnapshot() {
+
+        return assistantMessages()
+            .map(node =>
+                normalizeText(node.innerText)
+            )
+            .filter(Boolean);
+    }
+
+    function setComposerText(element, text) {
 
         element.focus();
 
-        /*
-         * React-controlled textarea inputs require
-         * the native setter instead of assigning .value
-         * directly.
-         */
-
-        if (
-            element instanceof
-            HTMLTextAreaElement
-        ) {
+        if (element.tagName === "TEXTAREA") {
 
             const setter =
                 Object.getOwnPropertyDescriptor(
                     HTMLTextAreaElement.prototype,
                     "value"
-                ).set;
+                )?.set;
 
-            setter.call(
-                element,
-                text
-            );
+            if (setter) {
+                setter.call(element, text);
+            } else {
+                element.value = text;
+            }
 
         } else {
 
             element.textContent = text;
+
         }
 
         element.dispatchEvent(
@@ -330,9 +171,8 @@
                 "input",
                 {
                     bubbles: true,
-                    inputType:
-                        "insertText",
-                    data: text,
+                    inputType: "insertText",
+                    data: text
                 }
             )
         );
@@ -341,439 +181,340 @@
             new Event(
                 "change",
                 {
-                    bubbles: true,
+                    bubbles: true
                 }
             )
         );
     }
 
-    // ------------------------------------------------------------
-    // CHATGPT ASSISTANT MESSAGES
-    // ------------------------------------------------------------
+    async function wait(ms) {
+        return new Promise(
+            resolve => setTimeout(resolve, ms)
+        );
+    }
 
-    function getAssistantMessages() {
+    async function submitMessage(text) {
 
-        const selectors = [
-            "[data-message-author-role='assistant']",
-            "article[data-testid*='conversation-turn']",
+        const composer =
+            findComposer();
+
+        if (!composer) {
+            throw new Error(
+                "ChatGPT composer not found"
+            );
+        }
+
+        setComposerText(
+            composer,
+            text
+        );
+
+        await wait(250);
+
+        const button =
+            findSendButton();
+
+        if (button) {
+
+            button.click();
+
+        } else {
+
+            composer.focus();
+
+            composer.dispatchEvent(
+                new KeyboardEvent(
+                    "keydown",
+                    {
+                        key: "Enter",
+                        code: "Enter",
+                        keyCode: 13,
+                        which: 13,
+                        bubbles: true
+                    }
+                )
+            );
+        }
+    }
+
+    function generationLooksActive() {
+
+        const stopSelectors = [
+            "button[aria-label*='Stop']",
+            "button[data-testid*='stop']",
+            "button[aria-label*='stop']"
         ];
 
-        let messages = [];
+        for (const selector of stopSelectors) {
 
-        for (
-            const selector of selectors
-        ) {
+            const node =
+                document.querySelector(selector);
 
-            const nodes =
-                document.querySelectorAll(
-                    selector
-                );
+            if (node) {
+                const rect =
+                    node.getBoundingClientRect();
 
-            if (nodes.length) {
-
-                messages = [
-                    ...nodes
-                ];
-
-                break;
+                if (
+                    rect.width > 0 &&
+                    rect.height > 0
+                ) {
+                    return true;
+                }
             }
         }
 
-        /*
-         * Filter out empty elements and,
-         * where possible, identify actual
-         * assistant content.
-         */
-
-        return messages
-            .map(
-                element => ({
-                    element,
-                    text:
-                        (
-                            element.innerText ||
-                            element.textContent ||
-                            ""
-                        ).trim(),
-                })
-            )
-            .filter(
-                item =>
-                    item.text.length > 0
-            );
+        return false;
     }
-
-    function getLastAssistantText() {
-
-        const messages =
-            getAssistantMessages();
-
-        if (!messages.length) {
-            return "";
-        }
-
-        return messages[
-            messages.length - 1
-        ].text;
-    }
-
-    // ------------------------------------------------------------
-    // WAIT FOR ASSISTANT RESPONSE
-    // ------------------------------------------------------------
 
     async function waitForAssistantResponse(
-        previousText
+        request
     ) {
+
+        const before =
+            assistantSnapshot();
 
         const started =
             Date.now();
 
-        let lastText = "";
+        let stableText = "";
         let stableSince = 0;
 
         while (
             Date.now() - started <
-            RESPONSE_TIMEOUT_MS
+            (request.timeout_ms || 180000)
         ) {
 
-            await sleep(500);
+            await wait(500);
 
             const current =
-                getLastAssistantText();
-
-            if (!current) {
-                continue;
-            }
-
-            /*
-             * We require the response to differ
-             * from the previous assistant message.
-             */
+                assistantSnapshot();
 
             if (
-                current === previousText
+                current.length === 0
             ) {
                 continue;
             }
 
-            if (
-                current !== lastText
-            ) {
+            const latest =
+                current[current.length - 1];
 
-                lastText = current;
-                stableSince =
-                    Date.now();
+            if (
+                before.length > 0 &&
+                current.length < before.length
+            ) {
+                continue;
+            }
+
+            if (!latest) {
+                continue;
+            }
+
+            if (latest !== stableText) {
+
+                stableText = latest;
+                stableSince = Date.now();
 
                 continue;
             }
 
-            /*
-             * Text has stopped changing.
-             * Treat it as complete after STABLE_MS.
-             */
+            const stableFor =
+                Date.now() - stableSince;
 
             if (
-                Date.now() -
-                stableSince >=
-                STABLE_MS
+                stableFor >= 1800 &&
+                !generationLooksActive()
             ) {
-
-                return current;
+                return latest;
             }
         }
 
         throw new Error(
-            "Timed out waiting for ChatGPT response."
+            "Timed out waiting for ChatGPT assistant response"
         );
     }
 
-    // ------------------------------------------------------------
-    // PROCESS ORCHESTRATOR REQUEST
-    // ------------------------------------------------------------
-
-    async function processRequest(
-        request
+    async function sendResponse(
+        request,
+        response,
+        error = null
     ) {
 
-        if (processing) {
+        try {
+
+            const body = {
+                id: request.id,
+                ok: !error,
+                response: response || "",
+                error: error || null,
+                url: location.href,
+                timestamp: Date.now()
+            };
+
+            const data =
+                await chrome.storage.local.get([
+                    "relayUrl",
+                    "token"
+                ]);
+
+            const relayUrl =
+                String(
+                    data.relayUrl ||
+                    "http://127.0.0.1:8767"
+                ).replace(/\/+$/, "");
+
+            const token =
+                String(
+                    data.token || ""
+                ).trim();
+
+            const headers = {
+                "Content-Type":
+                    "application/json"
+            };
+
+            if (token) {
+                headers[
+                    "X-Bridge-Token"
+                ] = token;
+            }
+
+            const result =
+                await fetch(
+                    relayUrl +
+                    "/browser/response",
+                    {
+                        method: "POST",
+                        headers,
+                        body: JSON.stringify(body)
+                    }
+                );
+
+            log(
+                "RESPONSE RELAY",
+                result.status
+            );
+
+        } catch (e) {
+
+            console.error(
+                TAG,
+                "response relay failed",
+                e
+            );
+        }
+    }
+
+    async function executeRequest(request) {
+
+        if (activeRequest) {
+
+            log(
+                "request already active",
+                activeRequest.id
+            );
+
             return;
         }
 
-        processing = true;
+        activeRequest = request;
 
-        project1Trace(
-            "REQUEST_RECEIVED",
-            request && request.id
-                ? "request_id=" + request.id
-                : "request_id=missing"
+        log(
+            "REQUEST RECEIVED",
+            request.id
         );
 
         try {
 
-            const payload =
-                request.payload || {};
+            if (
+                request.type &&
+                request.type !== "chat"
+            ) {
+                throw new Error(
+                    "Unsupported request type: " +
+                    request.type
+                );
+            }
 
-            const prompt =
+            const text =
                 String(
-                    payload.prompt ||
-                    payload.task ||
-                    ""
+                    request.text || ""
                 ).trim();
 
-            if (!prompt) {
+            if (!text) {
                 throw new Error(
-                    "Relay request contains empty prompt."
+                    "Request text is empty"
                 );
             }
 
-            console.log(
-                "[PROJECT-1] Received task:",
-                prompt
+            await submitMessage(text);
+
+            log(
+                "MESSAGE SUBMITTED",
+                request.id
             );
 
-            const input =
-                getPromptElement();
-
-            project1Trace(
-                "PROMPT_FOUND",
-                input
-                    ? "element_found"
-                    : "element_missing"
-            );
-
-            if (!input) {
-                throw new Error(
-                    "ChatGPT prompt input not found."
-                );
-            }
-
-            const previousText =
-                getLastAssistantText();
-
-            /*
-             * Insert the complete Gemma-generated
-             * message into the visible ChatGPT input.
-             */
-
-            setPromptValue(
-                input,
-                prompt
-            );
-
-            project1Trace(
-                "PROMPT_SET",
-                "prompt_value_written"
-            );
-
-            await sleep(300);
-
-            const sendButton =
-                getSendButton();
-
-            project1Trace(
-                "SEND_ATTEMPT",
-                sendButton
-                    ? "send_button"
-                    : "keyboard_fallback"
-            );
-
-            if (sendButton) {
-
-                sendButton.click();
-
-            } else {
-
-                /*
-                 * Fallback: submit with Enter.
-                 */
-
-                input.dispatchEvent(
-                    new KeyboardEvent(
-                        "keydown",
-                        {
-                            bubbles: true,
-                            cancelable: true,
-                            key: "Enter",
-                            code: "Enter",
-                        }
-                    )
-                );
-            }
-
-            console.log(
-                "[PROJECT-1] Prompt sent to visible ChatGPT."
-            );
-
-            project1Trace(
-                "WAITING_RESPONSE",
-                "waitForAssistantResponse_entered"
-            );
-
-            const result =
+            const answer =
                 await waitForAssistantResponse(
-                    previousText
+                    request
                 );
 
-            console.log(
-                "[PROJECT-1] ChatGPT response received:",
-                result
+            log(
+                "ASSISTANT RESPONSE FOUND",
+                request.id,
+                answer.slice(0, 120)
             );
 
-            project1Trace(
-                "ASSISTANT_RESPONSE_FOUND",
-                "response_detected"
-            );
-
-            project1Trace(
-                "RESPONSE_POST_ATTEMPT",
-                "POST /browser/response"
-            );
-
-            await authenticatedFetch(
-                "/browser/response",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                    },
-                    body: JSON.stringify({
-                        request_id:
-                            request.id,
-                        response:
-                            result,
-                        metadata: {
-                            source:
-                                "chatgpt_web_dom",
-                            bridge_version:
-                                "4.8",
-                        },
-                    }),
-                }
-            );
-
-            console.log(
-                "[PROJECT-1] Response returned to relay."
-            );
-
-            project1Trace(
-                "RESPONSE_POST_COMPLETE",
-                "POST completed"
+            await sendResponse(
+                request,
+                answer,
+                null
             );
 
         } catch (error) {
 
             console.error(
-                "[PROJECT-1] Request failed:",
+                TAG,
+                "REQUEST FAILED",
                 error
             );
 
-            project1Trace(
-                "PROCESS_ERROR",
+            await sendResponse(
+                request,
+                "",
                 String(error)
             );
 
-            /*
-             * Return the error through the same
-             * response channel so the orchestrator
-             * never waits forever.
-             */
-
-            try {
-
-                await authenticatedFetch(
-                    "/browser/response",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type":
-                                "application/json",
-                        },
-                        body:
-                            JSON.stringify({
-                                request_id:
-                                    request.id,
-                                response:
-                                    "[PROJECT-1 browser bridge error] " +
-                                    String(
-                                        error
-                                    ),
-                                metadata: {
-                                    source:
-                                        "chatgpt_web_dom",
-                                    bridge_version:
-                                        "4.8",
-                                    error:
-                                        true,
-                                },
-                            }),
-                    }
-                );
-
-            } catch (
-                responseError
-            ) {
-
-                console.error(
-                    "[PROJECT-1] Could not return error:",
-                    responseError
-                );
-            }
-
         } finally {
 
-            processing = false;
+            activeRequest = null;
         }
     }
 
-    // ------------------------------------------------------------
-    // UTILITY
-    // ------------------------------------------------------------
+    chrome.runtime.onMessage.addListener(
+        (message) => {
 
-    function sleep(ms) {
+            if (
+                message &&
+                message.type ===
+                "PROJECT1_RELAY_REQUEST"
+            ) {
+                executeRequest(
+                    message.request
+                );
+            }
+        }
+    );
 
-        return new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    ms
-                )
-        );
-    }
+    chrome.runtime.sendMessage(
+        {
+            type:
+                "PROJECT1_CONTENT_READY"
+        }
+    ).catch(() => {});
 
-    // ------------------------------------------------------------
-    // START
-    // ------------------------------------------------------------
-
-    async function initialize() {
-
-        await loadConfiguration();
-
-        console.log(
-            "[PROJECT-1] Browser Chat Bridge v4.8 loaded."
-        );
-
-        console.log(
-            "[PROJECT-1] Relay:",
-            relayUrl
-        );
-
-        /*
-         * Immediate heartbeat.
-         */
-
-        await pollRelay();
-
-        /*
-         * Continuous polling.
-         */
-
-        setInterval(
-            pollRelay,
-            HEARTBEAT_MS
-        );
-    }
-
-    initialize();
+    log(
+        "CONTENT SCRIPT READY",
+        location.href
+    );
 
 })();

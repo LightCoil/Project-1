@@ -26,3 +26,18 @@ test_output/
 # OS
 .DS_Store
 Thumbs.db
+# PROJECT-1 local runtime / secrets
+runtime_local.json
+chrome_local_profile/
+snapshots/
+*.log
+# ================================================================
+# PROJECT-1 LOCAL RUNTIME / SECRETS
+bridge_token.txt
+project1_relay_runtime.log
+project1_relay.log
+project1_ui.log
+chrome_project1.log
+chromium.log
+project1_xvfb.log
+tmp_project1_relay_launcher.py
