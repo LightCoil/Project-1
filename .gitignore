@@ -41,3 +41,4 @@ chrome_project1.log
 chromium.log
 project1_xvfb.log
 tmp_project1_relay_launcher.py
+.git_askpass_temp
