@@ -1,0 +1,2 @@
+PROJECT-1 WRITE FILE TEST
+write_file is operational.
