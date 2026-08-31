@@ -1,0 +1,57 @@
+{
+  "protocol_version": "2.9",
+  "timestamp_utc": "2026-08-28T12:39:31.133700+00:00",
+  "model": {
+    "name": "1",
+    "provider": "local_api",
+    "description": "Local model accessed through an OpenAI-compatible API.",
+    "capabilities": [
+      "general",
+      "analysis",
+      "reasoning",
+      "code",
+      "software_engineering"
+    ],
+    "context_window": 8192,
+    "max_output_tokens": 25,
+    "supports_streaming": false,
+    "supports_reasoning": true,
+    "supports_code": true,
+    "executable": false,
+    "transport": "http"
+  },
+  "runtime": {
+    "model": {
+      "name": "1",
+      "provider": "local_api",
+      "description": "Local model accessed through an OpenAI-compatible API.",
+      "capabilities": [
+        "general",
+        "analysis",
+        "reasoning",
+        "code",
+        "software_engineering"
+      ],
+      "context_window": 8192,
+      "max_output_tokens": 25,
+      "supports_streaming": false,
+      "supports_reasoning": true,
+      "supports_code": true,
+      "executable": false,
+      "transport": "http"
+    },
+    "api_connected": false,
+    "executor_attached": true,
+    "real_inference": false
+  },
+  "security": {
+    "api_key_persisted": false,
+    "api_url_persisted": false,
+    "secrets_written_to_source": false
+  },
+  "safety": {
+    "ui_modified": false,
+    "a_to_e_pipeline_modified": false,
+    "chatgpt_api_called": false
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "version": "4.1-relay-repair",
+  "timestamp": "2026-08-28T12:56:29.069904+00:00",
+  "relay": "/content/Project-1/orchestrator/browser_bridge/relay.py",
+  "classes": [
+    "BridgeMessage",
+    "BridgeState",
+    "RelayHandler",
+    "BrowserChatRelay"
+  ],
+  "functions": [
+    "__init__",
+    "browser_touch",
+    "browser_is_alive",
+    "create_request",
+    "consume_request",
+    "set_response",
+    "consume_response",
+    "_send_json",
+    "_authorized",
+    "do_OPTIONS",
+    "do_GET",
+    "do_POST",
+    "log_message",
+    "__init__",
+    "token",
+    "start",
+    "stop"
+  ],
+  "entry_candidates": [
+    "start"
+  ],
+  "detected_start_method": null,
+  "imported": true,
+  "relay_process_started": false,
+  "tunnel_started": false
+}

@@ -1,0 +1,67 @@
+{
+  "version": "2.1",
+  "task": "Analyze whether freedom is possible without knowledge.",
+  "models": [
+    {
+      "name": "local_reasoning",
+      "provider": "local",
+      "description": "Local model optimized for analytical reasoning.",
+      "capabilities": [
+        "reasoning",
+        "analysis",
+        "philosophy"
+      ],
+      "context_window": 8192,
+      "max_output_tokens": 25,
+      "supports_streaming": true,
+      "supports_reasoning": true,
+      "supports_code": false
+    },
+    {
+      "name": "local_general",
+      "provider": "local",
+      "description": "General-purpose local model.",
+      "capabilities": [
+        "general",
+        "summarization",
+        "analysis"
+      ],
+      "context_window": 8192,
+      "max_output_tokens": 25,
+      "supports_streaming": true,
+      "supports_reasoning": false,
+      "supports_code": false
+    },
+    {
+      "name": "local_coder",
+      "provider": "local",
+      "description": "Local model intended for programming tasks.",
+      "capabilities": [
+        "code",
+        "debugging",
+        "software_engineering"
+      ],
+      "context_window": 8192,
+      "max_output_tokens": 25,
+      "supports_streaming": true,
+      "supports_reasoning": false,
+      "supports_code": true
+    }
+  ],
+  "history": [
+    {
+      "model": "local_reasoning",
+      "task": "Analyze the philosophical structure of the user's thesis.",
+      "result": "[local_reasoning]\nAnalysis completed in development mode.\nTask: Analyze the philosophical structure of the user's thesis.",
+      "expected_output": "Key arguments and distinctions."
+    },
+    {
+      "model": "local_general",
+      "task": "Independently identify objections and counterarguments.",
+      "result": "[local_general]\nIndependent analysis completed in development mode.\nTask: Independently identify objections and counterarguments.",
+      "expected_output": "Potential objections."
+    }
+  ],
+  "final": "Development-mode final synthesis. A real ChatGPT provider will replace this planner response.",
+  "timestamp": "2026-08-28T12:05:10.412137+00:00"
+}
