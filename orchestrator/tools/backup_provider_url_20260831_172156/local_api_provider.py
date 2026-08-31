@@ -41,27 +41,12 @@ class LocalOpenAICompatibleProvider:
         self.timeout = timeout
         self.max_output_tokens = max_output_tokens
 
-        # Normalize the supplied endpoint to a server base URL.
-        #
-        # Accepted forms:
-        #
-        #   https://host
-        #   https://host/v1
-        #   https://host/v1/models
-        #   https://host/v1/chat/completions
-        #   https://host/models
-        #   https://host/chat/completions
-        #
-        # Internally base_url NEVER contains the trailing /v1.
-
-        self.api_url = self.api_url.rstrip("/")
-
+        # Normalize full endpoints to a base URL.
         for suffix in (
             "/v1/chat/completions",
             "/chat/completions",
             "/v1/models",
             "/models",
-            "/v1",
         ):
             if self.api_url.endswith(suffix):
                 self.api_url = self.api_url[
