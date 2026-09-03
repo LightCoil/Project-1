@@ -159,6 +159,8 @@ class RuntimeFactory:
             return HttpGenerationClient(
                 endpoint=config.endpoint,
                 api_key=config.api_key,
+                model=config.model,
+                generation_parameters=config.generation_parameters,
             )
 
         raise ValueError(

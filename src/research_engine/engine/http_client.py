@@ -31,10 +31,16 @@ class HttpGenerationClient:
         endpoint: str | None = None,
         api_key: str | None = None,
         timeout: float = 120.0,
+        model: str | None = None,
+        generation_parameters: dict[str, Any] | None = None,
     ) -> None:
         self.endpoint = endpoint
         self.api_key = api_key
         self.timeout = timeout
+        self.model = model
+        self.generation_parameters = deepcopy(
+            generation_parameters or {}
+        )
 
     def generate(
         self,
@@ -199,14 +205,10 @@ class HttpGenerationClient:
             None,
         )
 
-        model = None
-
-        if worker is not None:
-            model = getattr(
-                worker,
-                "model",
-                None,
-            )
+        # The worker.model is a logical worker identifier.
+        # The actual API model comes from ModelConfig and is
+        # passed into this client by RuntimeFactory.
+        model = self.model
 
         payload: dict[str, Any] = {
             "system_prompt": system_prompt,
@@ -235,6 +237,21 @@ class HttpGenerationClient:
         if context:
             payload["context"] = context
 
+        # ModelConfig-level generation parameters.
+        for key, value in self.generation_parameters.items():
+            if key in {
+                "system_prompt",
+                "user_prompt",
+                "messages",
+                "model",
+                "context",
+            }:
+                continue
+
+            payload[key] = deepcopy(value)
+
+        # Request-level generation parameters override
+        # ModelConfig defaults.
         if isinstance(generation_parameters, dict):
             for key, value in deepcopy(
                 generation_parameters
