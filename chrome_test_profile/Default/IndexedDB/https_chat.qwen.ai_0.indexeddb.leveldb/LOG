@@ -1,0 +1,5 @@
+2026/09/04-19:38:34.575 2477 Creating DB /content/chrome_test_profile/Default/IndexedDB/https_chat.qwen.ai_0.indexeddb.leveldb since it was missing.
+2026/09/04-19:38:34.587 2477 Reusing MANIFEST /content/chrome_test_profile/Default/IndexedDB/https_chat.qwen.ai_0.indexeddb.leveldb/MANIFEST-000001
+2026/09/04-19:38:37.473 247e Level-0 table #5: started
+2026/09/04-19:38:37.484 247e Level-0 table #5: 234538 bytes OK
+2026/09/04-19:38:37.490 247e Delete type=0 #3
