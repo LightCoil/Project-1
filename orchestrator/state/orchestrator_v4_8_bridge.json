@@ -1,0 +1,19 @@
+{
+  "version": "4.8",
+  "relay_port": 8767,
+  "public_relay": "https://batteries-fabrics-pleased-mitchell.trycloudflare.com",
+  "extension": "/content/Project-1/orchestrator/browser_bridge/chrome_extension",
+  "direction": [
+    "Gemma",
+    "PROJECT-1",
+    "Cloudflare relay",
+    "Chrome extension",
+    "visible ChatGPT Web",
+    "Chrome extension",
+    "Cloudflare relay",
+    "PROJECT-1"
+  ],
+  "chatgpt_api": false,
+  "chatgpt_token": false,
+  "manual_transfer": false
+}

@@ -1,0 +1,14 @@
+{
+  "version": "4.8.7",
+  "model": "turboderp_gemma-2-27b-it-exl2_3.0bpw",
+  "provider": "local_api",
+  "api_url": "https://shipment-agricultural-doctor-favourite.trycloudflare.com",
+  "registry_models": [
+    "turboderp_gemma-2-27b-it-exl2_3.0bpw"
+  ],
+  "executor_models": [],
+  "real_inference_executed": true,
+  "chatgpt_api_used": false,
+  "chatgpt_web_used": false,
+  "browser_bridge_used": false
+}

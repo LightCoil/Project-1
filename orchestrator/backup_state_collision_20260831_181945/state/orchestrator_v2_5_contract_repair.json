@@ -1,0 +1,14 @@
+{
+  "protocol_version": "2.5",
+  "status": "contract_repaired",
+  "prompt_contract": {
+    "available": true,
+    "task": true,
+    "existing_work": true,
+    "distribution_instruction": true
+  },
+  "zero_model_mode": "chatgpt_only",
+  "unavailable_model_protection": true,
+  "ui_modified": false,
+  "ae_pipeline_modified": false
+}

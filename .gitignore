@@ -103,3 +103,6 @@ Thumbs.db
 # ============================================================
 
 sample_data/
+.orchestrator_api.json
+*.env
+*.pyc

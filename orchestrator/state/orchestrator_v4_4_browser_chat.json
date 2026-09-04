@@ -1,0 +1,10 @@
+{
+  "version": "4.4",
+  "relay_port": 8767,
+  "relay_running": true,
+  "browser_chat": true,
+  "chatgpt_api": false,
+  "manual_json": false,
+  "manual_paste": false,
+  "extension_ready": true
+}

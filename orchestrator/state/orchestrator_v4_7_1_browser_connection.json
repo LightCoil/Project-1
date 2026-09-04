@@ -1,0 +1,11 @@
+{
+  "version": "4.7.1",
+  "relay_host": "0.0.0.0",
+  "relay_port": 8767,
+  "browser_connected": false,
+  "heartbeat_endpoint": "/browser/poll",
+  "chatgpt_api_used": false,
+  "chatgpt_message_sent": false,
+  "manual_json": false,
+  "manual_paste": false
+}

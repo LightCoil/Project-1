@@ -1,0 +1,12 @@
+{
+  "version": "4.2-real-relay",
+  "relay_class": "orchestrator.browser_bridge.relay.BrowserChatRelay",
+  "host": "0.0.0.0",
+  "port": 8767,
+  "thread_alive": true,
+  "tcp_listener": true,
+  "health_check": true,
+  "browser_connected": false,
+  "token_saved_to_disk": false,
+  "relay_running": true
+}
